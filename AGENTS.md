@@ -68,6 +68,20 @@ rm -f main.aux main.log main.nav main.out main.toc main.vrb \
 - Never commit auxiliary LaTeX build files (`*.aux`, `*.log`, `*.nav`, etc.);
   they are covered by `.gitignore`.
 
+## Folder Naming Rules
+
+When initializing a new lecture folder by copying the `00 - template` directory, you **must** use the following naming format:
+`DayX-[Avanzado|Inicial]-Tema`
+
+Where:
+* `X` is the day number (1 to 8).
+* `Avanzado` or `Inicial` specifies the student level.
+* `Tema` is the topic name (PascalCase, or alphanumeric hyphenated).
+
+Example folder names:
+* `Day1-Inicial-BusquedaBinaria`
+* `Day2-Avanzado-SegmentTree`
+
 ---
 
 ## Template Customization Rules

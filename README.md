@@ -27,9 +27,18 @@ tc-arg-2026/
 
 ## Creating a New Class
 
-1. **Copy the template folder** and rename it with your class name:
+1. **Copy the template folder** and rename it using the naming convention: `DayX-[Avanzado|Inicial]-Tema`
+   
+   * `X` represents the day of the lecture (from 1 to 8).
+   * Track is either `Avanzado` or `Inicial`.
+   * Tema is the topic of the class (without spaces, using PascalCase or hyphens).
+
+   Example folder names:
+   * `Day1-Inicial-BusquedaBinaria`
+   * `Day1-Avanzado-SegmentTree`
+
    ```bash
-   cp -r "00 - template" "01 - Mi Clase"
+   cp -r "00 - template" "Day1-Inicial-BusquedaBinaria"
    ```
 
 2. **Edit `main.tex`**:
