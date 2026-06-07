@@ -37,8 +37,8 @@
 \useinnertheme{circles}
 
 
-\definecolor{ColorUNR}{HTML}{0b2755} 
-\usecolortheme[named=ColorUNR]{structure}
+\definecolor{ColorUNLP}{HTML}{8c0011} 
+\usecolortheme[named=ColorUNLP]{structure}
 %\usecolortheme[named=ColorUNR]{exampleblock}
 
 %\setbeamertemplate{blocks}[rounded][shadow=true]
@@ -60,8 +60,8 @@
 
 \author[Matias Ramos]{Matias Ramos}
 
-\institute[]{Universidad Tecnológica Nacional - Facultad Regional Santa Fe}
-\date[TC 2025]{Training Camp 2025}
+\institute[]{Universidad Nacional de La Plata – Facultad de Informática}
+\date[TC 2026]{Training Camp 2026}
 \titlegraphic{\includegraphics[clip,height=2cm,keepaspectratio]{logos/tcarg.jpeg}}
 
 %End of title page configuration block
@@ -92,57 +92,22 @@
 % Frame de Sponsors, me parece mejor ponerlo al principio
 % Antes del índice/contenido
 
-% --- Sponsors Frame 1: Organizador & Diamond Plus ---
-
-
-% First sponsors frame: Organizador and Diamond Plus
+% --- Organizadores y Sponsors ---
 \begin{frame}{Gracias Sponsors!}
     \begin{columns}[t]
         \column{0.5\textwidth}
         \centering
-        Organizador\\
+        Organiza\\
         \vspace{0.5cm}
-        \includegraphics[width=1\textwidth,keepaspectratio]{logos/aapc.png}
-        \includegraphics[width=1\textwidth,keepaspectratio]{logos/utn_santafe.png}
+        \includegraphics[width=0.6\textwidth,keepaspectratio]{logos/aapc.png}\\
+        \vspace{0.3cm}
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{logos/unlp_informatica.png}
         \column{0.5\textwidth}
         \centering
-        Diamond Plus\\
-        \includegraphics[width=1\textwidth,keepaspectratio]{logos/GTSlogo.jpeg}
+        Diamond Sponsor\\
+        \vspace{0.5cm}
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{logos/GTSlogo.jpeg}
     \end{columns}
-\end{frame}
-
-% --- Sponsors Frame 2: Gold & Oro ---
-
-\begin{frame}{Gracias Sponsors!}
-    % Platino at the top, full width
-    \centering
-    Platino\\
-    \includegraphics[width=0.6\textwidth,keepaspectratio]{logos/folder.png}
-    
-    \vfill
-    
-    % Gold and Oro at the bottom in two columns
-    \begin{columns}[b]
-        % Gold column
-        \column{0.5\textwidth}
-        \centering
-        Gold\\
-        \includegraphics[width=0.8\textwidth,keepaspectratio]{logos/neuralsoft.png}
-        % Oro column
-        \column{0.5\textwidth}
-            \centering
-        Oro\\
-        \includegraphics[width=0.8\textwidth,keepaspectratio]{logos/jerarquicos.jpg}
-    \end{columns}
-\end{frame}
-
-% --- Sponsors Frame 3: Aliado ---
-
-\begin{frame}{Gracias Sponsors!}
-    \centering
-    Aliado\\
-    \vspace{1cm}
-    \includegraphics[width=0.6\textwidth,keepaspectratio]{logos/santa_fe_logo_v2.jpg}
 \end{frame}
 
 
@@ -224,6 +189,78 @@ where $pg$ is the observation .
 
 \end{algorithmic}
 \end{algorithm}
+\end{frame}
+
+
+\begin{frame}[fragile]{Implementación (Ejemplo de Código)}
+    \begin{block}{Código C++}
+    \begin{verbatim}
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n;
+    cin >> n;
+    cout << "Hola TC 2026: " << n << endl;
+    return 0;
+}
+    \end{verbatim}
+    \end{block}
+\end{frame}
+
+
+\begin{frame}{Complejidades Comunes en CP}
+    \begin{table}
+        \centering
+        \begin{tabular}{|l|c|c|}
+            \hline
+            \textbf{Complejidad} & \textbf{Límite de $N$} & \textbf{Operaciones} \\
+            \hline
+            $\mathcal{O}(1)$ & $10^{18}$ & Constante \\
+            $\mathcal{O}(\log N)$ & $10^{18}$ & Búsqueda Binaria \\
+            $\mathcal{O}(N)$ & $10^8$ & Bucle simple \\
+            $\mathcal{O}(N \log N)$ & $10^6$ & Ordenamiento / Segment Tree \\
+            $\mathcal{O}(N^2)$ & $5000$ & Fuerza Bruta doble \\
+            $\mathcal{O}(2^N)$ & $20$ & Backtracking / DP bitmask \\
+            \hline
+        \end{tabular}
+        \caption{Guía de complejidades para resolver problemas.}
+    \end{table}
+\end{frame}
+
+
+\begin{frame}{Uso de Bloques y Cajas}
+    \begin{block}{Bloque Estándar}
+        Información importante o teoremas que se quieren destacar.
+    \end{block}
+    
+    \begin{alertblock}{Bloque de Alerta (Peligro/Importante)}
+        Cuidado con los desbordamientos de enteros (\textit{overflow}). ¡Usen \texttt{long long}!
+    \end{alertblock}
+    
+    \begin{exampleblock}{Bloque de Ejemplo}
+        Un caso de prueba o demostración del algoritmo.
+    \end{exampleblock}
+\end{frame}
+
+
+\begin{frame}{Diseño de Dos Columnas}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \begin{block}{Explicación del Algoritmo}
+            \begin{itemize}
+                \item Paso 1: Inicializar las estructuras de datos.
+                \item Paso 2: Procesar cada consulta en tiempo $\mathcal{O}(\log N)$.
+                \item Paso 3: Actualizar los valores correspondientes.
+            \end{itemize}
+        \end{block}
+        
+        \column{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{logos/tcarg.jpeg}
+        \\ \vspace{0.2cm}
+        \small{Podemos incluir diagramas o imágenes explicativas al lado del texto.}
+    \end{columns}
 \end{frame}
 
 
