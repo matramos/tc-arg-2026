@@ -69,8 +69,10 @@
 
 
 %------------------------------------------------------------
-%The next block of commands puts the table of contents at the 
-%beginning of each section and highlights the current section:
+% \AtBeginSection inserts an automatic Outline slide at the start of
+% each \section{}, highlighting the current section. Change the
+% \section names below to your real topic names and these slides
+% will update automatically.
 \AtBeginSection[]
 {
   \begin{frame}
@@ -121,13 +123,16 @@
 %---------------------------------------------------------
 
 
-\section{Part1}
+% ============================================================
+% Reemplazar el nombre de la sección con el tema de la clase.
+% ============================================================
+\section{Introducción al Tema}
 
-\begin{frame}{Topic1}
-Hello world! 
+\begin{frame}{Motivación}
 \begin{itemize}
-    \item Introduction 
-    \item Task Formulation
+    \item ¿Por qué es importante este tema?
+    \item Ejemplos de problemas reales donde aparece.
+    \item Objetivo de esta clase.
 \end{itemize}
 \end{frame}
 
@@ -167,7 +172,7 @@ where $pg$ is the observation .
 
 \end{frame}
 
-\section{Part2}
+\section{Desarrollo}
 
 
 \begin{frame}[fragile]{Forward Algorithm}
