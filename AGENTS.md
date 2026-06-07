@@ -52,7 +52,7 @@ rm -f main.aux main.log main.nav main.out main.toc main.vrb \
   ```
 - After adding a new PDF logo asset, add an exception to `.gitignore`:
   ```
-  !00 - template/logos/your-logo.pdf
+  !logos/your-logo.pdf
   ```
 - The compiled `main.pdf` and `logoTC.pdf` are intentionally tracked in git as a
   preview for contributors. All other `*.pdf` files are ignored.
@@ -91,7 +91,7 @@ without explicit user instruction — these reflect the official identity of the
 
 ## Logos
 
-All active logos are stored in `00 - template/logos/`. Do not delete or rename
+All active logos are stored in logos/. Do not delete or rename
 any of these files without updating the corresponding `\includegraphics{}` calls
 in `main.tex` and recompiling to verify.
 

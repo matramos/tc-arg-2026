@@ -11,16 +11,16 @@ Organized by [AAPC](https://aapc.com.ar) · Diamond Sponsor: GTS
 
 ```
 tc-arg-2026/
+├── logos/                # Shared repository logos — ONE copy for all classes!
+│   ├── logo_aapc.png         # AAPC organizer logo
+│   ├── logoTC.pdf            # TC Argentina logo (vector)
+│   ├── unlp_informatica.png  # UNLP Facultad de Informática logo
+│   ├── unlp.png              # UNLP general logo
+│   ├── GTSlogo.jpeg          # GTS Diamond Sponsor logo
+│   └── icpc.jpeg             # ICPC logo
 └── 00 - template/
     ├── main.tex          # Main Beamer template — copy this for each new class
-    ├── main.pdf          # Compiled preview of the template
-    └── logos/
-        ├── logo_aapc.png         # AAPC organizer logo
-        ├── logoTC.pdf            # TC Argentina logo (vector)
-        ├── unlp_informatica.png  # UNLP Facultad de Informática logo
-        ├── unlp.png              # UNLP general logo
-        ├── GTSlogo.jpeg          # GTS Diamond Sponsor logo
-        └── icpc.jpeg             # ICPC logo
+    └── main.pdf          # Compiled preview of the template
 ```
 
 ---
