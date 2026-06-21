@@ -26,7 +26,7 @@ Where:
 
 ---
 
-## 2. Template Customization
+## 2. Template Customization & Content Rules
 
 Modify the following LaTeX command blocks in the new `main.tex` to configure the metadata of the class:
 
@@ -40,6 +40,10 @@ Modify the following LaTeX command blocks in the new `main.tex` to configure the
 
 > [!WARNING]
 > Do **not** modify the ColorUNLP color theme (`#8c0011`) or the sponsor frames (`Gracias Sponsors!`) unless explicitly instructed by the repository admin.
+
+### Pedagogical Content Rules (Especially for "Inicial" Level)
+* **Code Examples:** Always try to include concrete, fully functional C++ implementation examples (using standard `block` and `verbatim` environments) to demonstrate how algorithms are coded in practice.
+* **Proposed Exercises:** Always provide a final slide containing a list of 6 to 8 proposed practice problems (mainly from the CSES Problem Set) so that students can practice the concepts right after class.
 
 ---
 
