@@ -77,3 +77,14 @@ rm -f main.aux main.log main.nav main.out main.toc main.vrb \
 
 * **Commit auxiliary files:** Never commit auxiliary build files.
 * **PDF Preview:** The compiled `main.pdf` of the template and the lecture folders are intentionally tracked on GitHub to serve as a preview. Ensure that `.gitignore` permits this via the `!**/main.pdf` rule.
+
+---
+
+## 6. Git Contribution Flow & PRs
+
+If the contributor does not have write access to the upstream repository:
+1. **Fork & Clone:** The agent/contributor must fork the repository and clone their fork locally.
+2. **Branching:** Work must be done in a descriptive branch on the fork (e.g., `feature/dayX-lecture`).
+3. **Commit & Push:** Commit changes (including the new lecture directory, `main.tex`, local `fotos/` folder, and the compiled `main.pdf`) and push them to the fork.
+4. **Pull Request:** Open a Pull Request from their fork branch to the upstream `main` branch.
+5. **Admin Bypass:** Only repository admins (like `matramos`) are allowed to bypass branch protection rules and push changes directly to `main`.
