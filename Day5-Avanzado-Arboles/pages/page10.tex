@@ -11,9 +11,29 @@
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Detalle del algoritmo}
+
+En vez de pensarlo como una optimización, plantemos el algoritmo desde cero con esta idea de ir pasando el conjunto de colores de un hijo al padre.
+
+Bajo esta perspectiva, contruimos un conjunto a medida que recorremos un camino pesado de abajo hacia arriba, agregando los colores de los descendientes faltantes de cada nodo. (los que no estan en el subarbol pesado)
+
+\begin{lstlisting}[language={},basicstyle=\ttfamily\small]
+    for p : caminos_pesados
+      s = {}
+      for u : ascendente(p)
+        for v : hijo liviano de u
+          for w : subarbol(v)
+            agregar color(w) a s
+        respuesta[u] = tamano de s
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
   \frametitle{Distinct Colors: doble conteo}
 
-Moralmente, nuestro programa hace esto:
+Más allá del orden de iteración, nuestro algoritmo recorre los mismos valores que este otro:
 
 \begin{lstlisting}[language={},basicstyle=\ttfamily\small]
     for u = 1..n
