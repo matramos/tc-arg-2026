@@ -1,0 +1,79 @@
+\subsection{Algoritmo de Mo}
+
+\begin{frame}
+  \frametitle{Consultas de caminos usando el truco de Mo}
+
+  Esta idea es muy buena pero depende de propiedades particulares de la operación \texttt{xor}:
+
+  \vspace{0.5em}
+
+  \begin{itemize}
+    \item es asociativa
+    \item tiene elemento neutro
+    \item tiene inverso para cada elemento
+    \item es conmutativa
+    \item \textbf{cada elemento es su propio inverso}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de caminos usando el truco de Mo: generalización}
+
+  En realidad se puede generalizar a cualquier operación si cumple las primeras 4.
+
+  \vspace{0.75em}
+
+  \begin{alertblock}{Nota}
+    conmutativa es opcional pero complica la implementación
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de caminos usando el truco de Mo: idea}
+
+  Básicamente la idea es hacer un \texttt{for} desde la posición de \(u\) hasta la de \(v\), e ir acumulando los valores.
+
+  \vspace{0.75em}
+
+  A medida que hacemos esto, hay que chequear si estamos yendo o volviendo por una arista. En caso de estar yendo, acumulamos el valor de la arista. En caso de estar volviendo, acumulamos el inverso del valor de la arista.
+
+  \vspace{0.75em}
+
+  De esta forma, tenemos un algoritmo que funciona para una operación donde no necesariamente cada elemento es su propio inverso.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de caminos usando el truco de Mo: implementación}
+
+  Para chequear esto, simplemente guardamos los índices de las aristas en el Euler tour en vez de los valores.
+
+  \vspace{0.75em}
+
+  Aparte, podemos mantener un array de booleanos que nos diga si ya sumamos el valor de la arista o no.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Consultas de caminos usando el truco de Mo: código}
+
+\begin{lstlisting}
+bool tengo[maxn];
+int query(int u, int v) {
+    int ans = 0;
+    int l = position[u], r = position[v];
+    if (l > r) swap(l, r);
+    for (int i = l; i < r; i++) {
+        int j = euler_tour[i];
+        if (tengo[j]) ans -= edges[j].x;
+        else          ans += edges[j].x;
+        tengo[j] = !tengo[j];
+    }
+    return ans;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de caminos usando el truco de Mo: complejidad}
+
+  Esto funciona pero es horrendamente lento. Claramente hace un \texttt{for} \(O(N)\) por consulta.
+\end{frame}

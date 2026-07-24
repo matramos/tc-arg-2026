@@ -1,0 +1,88 @@
+\begin{frame}
+  \frametitle{Distinct Colors}
+
+  \begin{itemize}
+    \item Solucion Naive: Por cada nodo, metemos todos los valores del subárbol en un \texttt{set} y devolvemos \texttt{size()}.
+    \item Costo: \(O(N^2)\).
+    \item Para construir el conjunto de colores de un subarbol, podemos reutilizar el conjunto de colores de alguno de sus hijos. En particular, el del hijo pesado, ya que es el más grande.
+    \item Esto seguro es más rápido, pero ¿cambia el costo asintótico? Resulta que sí, veamos por qué.
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Detalle del algoritmo}
+
+En vez de pensarlo como una optimización, plantemos el algoritmo desde cero con esta idea de ir pasando el conjunto de colores de un hijo al padre.
+
+Bajo esta perspectiva, contruimos un conjunto a medida que recorremos un camino pesado de abajo hacia arriba, agregando los colores de los descendientes faltantes de cada nodo. (los que no estan en el subarbol pesado)
+
+\begin{lstlisting}[language={},basicstyle=\ttfamily\small]
+    for p : caminos_pesados
+      s = {}
+      for u : ascendente(p)
+        for v : hijo liviano de u
+          for w : subarbol(v)
+            agregar color(w) a s
+        respuesta[u] = tamano de s
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Distinct Colors: doble conteo}
+
+Más allá del orden de iteración, nuestro algoritmo recorre los mismos valores que este otro:
+
+\begin{lstlisting}[language={},basicstyle=\ttfamily\small]
+    for u = 1..n
+      for v : g[u]
+        if u-v es liviana
+          for w : subarbol(v)
+            print(w, v, u)
+\end{lstlisting}
+
+O sea, itera por los pares \(\{(u, w) \mid u \in V,\ w \in D(u)\}\), donde
+
+\centerline{$\displaystyle
+  D(u) = \{ \text{descendientes de } u \text{ que no están en el subárbol pesado} \}
+$}
+
+\smallskip
+
+Pero este es el mismo conjunto de pares que \(\{(u, w) \mid w \in V,\ u \in A(w)\}\), donde
+
+\centerline{$\displaystyle
+  A(w) = \{ \text{ancestros de } w \text{ con arista liviana hacia } w \}
+$}
+
+El cual es claramente \(O(N \log N)\), porque por cada \(w\) hay solo \(\log_2(N)\) aristas livianas en su camino a la raíz.
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Distinct Colors: código}
+
+\begin{lstlisting}
+    vector<int> distintos() {
+        vector<int> ans(n);
+        unordered_set<int> s;
+        forn(f, n) if (h[f] == -1) {
+            int u = f;
+            while (true) {
+                s.insert(u);
+                for (int v : g[u]) if (v != p[u] && v != h[u])
+                    meter_todo(v, u, s);
+                ans[u] = s.size();
+                int w = p[u];
+                // corto al llegar al tope del camino pesado
+                if (w == -1 || h[w] != u) break;
+                u = w;
+            }
+            s.clear();
+        }
+        return ans;
+    }
+\end{lstlisting}
+\end{frame}

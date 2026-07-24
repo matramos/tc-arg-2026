@@ -1,0 +1,65 @@
+\subsection{Definiciones}
+
+\begin{frame}
+  \frametitle{Aristas livianas y pesadas}
+
+  Consideramos un árbol de \(N\) nodos.
+
+  \vspace{0.75em}
+
+  \begin{itemize}
+    \item Por cada nodo con hijos, designamos como \textbf{hijo pesado} a aquel cuyo subárbol tiene la máxima cantidad de nodos (si hay más de uno, elegimos uno arbitrariamente).
+    \item A las aristas que conectan nodos con su hijo pesado las llamamos \textbf{pesadas}.
+    \item Si una arista no es pesada, la llamamos \textbf{liviana}.
+    \item Terminología: a los caminos maximales formados enteramente por aristas pesadas los llamamos \textbf{caminos pesados}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \centering
+  \includegraphics[height=0.85\textheight,keepaspectratio]{fotos/heavy.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Aristas livianas y pesadas: observaciones}
+
+  \begin{block}{Observación clave}
+    \begin{itemize}
+      \item El subarbol que cuelga de una arista liviana tiene tamaño menor a la mitad del subarbol del nodo padre.
+      \item En un camino nodo--raíz puede haber a lo sumo \(\log_2 N\) aristas livianas.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Aristas livianas y pesadas: observaciones}
+
+  \centering
+  \includegraphics[height=0.65\textheight,keepaspectratio]{fotos/few-light.png}
+
+  \[
+  N \geq |u_1| > 2|v_1| > 2|u_2| > 4|v_2| > \dots > 2^k |v_k| \qquad |v_k| \geq 1 \\
+  \Rightarrow k \leq \log_2 N
+  \]
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Heavy-light decompose: código}
+
+\begin{lstlisting}
+        int p[maxn]; // padre (-1 si no tiene)
+        int s[maxn]; // tamano del subarbol
+        int h[maxn]; // hijo pesado (-1 si no tiene)
+        
+        void decompose() {
+            forn(u, n) {
+                h[u] = -1;
+                for (int v : g[u]) if (v != p[u]) {
+                    if (h[v] == -1 || s[h[v]] < s[v]) {
+                        h[u] = v;
+                    }
+                }
+            }
+        }
+\end{lstlisting}
+\end{frame}

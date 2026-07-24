@@ -1,0 +1,25 @@
+\subsection{Descomposición en caminos pesados}
+
+\begin{frame}
+  \frametitle{Consultas de caminos: descomposición}
+
+  La idea es nuevamente aprovechar que cualquier camino se puede descomponer en varios pedazos, cada uno parte de un camino pesado distinto, y que esta descomposición tiene pocas partes (\(O(\log N)\)).
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de caminos: descomposición}
+
+  \begin{center}
+    \includegraphics[height=0.85\textheight,keepaspectratio]{fotos/heavy-paths.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de caminos: consultas por pedazo}
+
+  Para resolver la suma dentro de cada pedazo necesitamos poder hacer consultas de rango en el array de elementos del camino pesado.
+
+  \vspace{0.75em}
+
+  La forma clásica es construir un \textbf{segment tree} sobre cada camino pesado.
+\end{frame}

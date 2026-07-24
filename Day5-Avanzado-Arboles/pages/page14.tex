@@ -1,0 +1,32 @@
+
+
+\begin{frame}
+  \frametitle{Consultas de caminos: idea del algoritmo}
+
+  \begin{itemize}
+    \item Si el camino está completamente contenido en un camino pesado, hacemos la consulta directamente.
+    \item Si no, el camino \(u\)--\(v\) necesariamente llega hasta la cima de un camino pesado y se sale hacia arriba.
+    \item Detectamos cuál de las dos puntas es la que se sale por la cima, y hacemos la consulta en ese camino pesado.
+    \item De esta forma resolvemos la punta del camino \(u\)--\(v\) y achicamos el camino que falta por resolver.
+  \end{itemize}
+
+  \vspace{0.75em}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Consultas de caminos: consulta}
+
+\begin{lstlisting}
+int query(int u, int v) {
+  int tu = htop[u], tv = htop[v];
+  if (tu == tv) {
+    if (dep[u] > dep[v]) swap(u, v);
+    return tree[tu].query(dep[u]-dep[tu], dep[v]-dep[tu]+1);
+  } else {
+    if (dep[tu] < dep[tv]) swap(u, v), swap(tu, tv);
+    return tree[tu].query(0, dep[u]-dep[tu]+1) + query(p[tu], v);
+  }
+}
+\end{lstlisting}
+\end{frame}

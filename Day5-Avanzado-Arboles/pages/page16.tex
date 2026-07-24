@@ -1,0 +1,87 @@
+\section{Euler tour}
+
+\begin{frame}
+\centering
+\huge Euler Tour
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de xor en caminos (sin updates)}
+
+  \begin{itemize}
+    \item Te dan un arbol con numeros en las aristas
+    \item Querés soportar consultas de xor en caminos
+    \item \(N \leq 2 \cdot 10^5\)
+    \item \(Q \leq 2 \cdot 10^5\)
+  \end{itemize}
+  Esto se puede resolver descomponiendo en caminos pesados.
+
+  \vspace{0.75em}
+
+  Pero también hay una solución muchísimo más simple.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de xor en caminos: idea}
+
+  La idea es construir el \textbf{Euler tour}: un array de los valores de aristas en el orden en que te los encontrás si hacés un DFS del árbol.
+
+  \vspace{0.75em}
+
+  \begin{itemize}
+    \item Se inserta el valor tanto al \textbf{ir} como al \textbf{volver} de cada arista.
+    \item Para responder una consulta de xor en un camino \(u\)--\(v\), consultamos en ese array. El rango corresponde a las posiciones de \(u\) y \(v\) en el recorrido.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Consultas de xor en caminos: por qué funciona}
+
+  Si mirás el intervalo de valores entre una aparición de \(u\) y una de \(v\), cualquier arista por la que ``fuimos y volvimos'' entre medio en el DFS se cancela, porque el xor es su propia inversa.
+
+  \vspace{0.75em}
+
+  Y coincidentemente esas aristas son las que \textbf{no} están en el camino \(u\)--\(v\). O sea, las que no se cancelan son exactamente las del camino \(u\)--\(v\).
+
+  \vspace{0.75em}
+
+  Por lo tanto, la respuesta es simplemente el xor de los valores de las aristas en el camino \(u\)--\(v\).
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Consultas de xor en caminos: código}
+
+\begin{lstlisting}
+struct edge {
+    int u, v, x;
+    int opp(int w) { return u + v - w; }
+}
+edge edges[maxn];
+vector<int> g[maxn];
+vector<int> euler_tour;
+int position[maxn];
+void dfs(int u, int p) {
+    for (int i : g[u]) {
+        edge e = edges[i];
+        int v = e.opp(u);
+        if (v == p) continue;
+
+        position[u] = sz(euler_tour);
+        euler_tour.push_back(e.x);
+        position[v] = sz(euler_tour);
+        dfs(v, u);
+        euler_tour.push_back(e.x);
+    }
+}
+
+void init() {
+    dfs(0, -1);
+    init_array(euler_tour);
+}
+
+void query(int u, int v) {
+    int pu = position[u], pv = position[v];
+    return xor_array(pu, pv);
+}
+\end{lstlisting}
+\end{frame}

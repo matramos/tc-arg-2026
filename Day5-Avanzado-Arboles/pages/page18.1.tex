@@ -1,0 +1,27 @@
+\begin{frame}
+  \centering
+  \includegraphics[height=0.85\textheight,keepaspectratio]{fotos/path.png}
+\end{frame}
+
+\begin{frame}[fragile]
+
+
+  \begin{lstlisting}
+
+              vector<int> perm = orden_mo(queries);
+              int l = 0, r = 0;
+              for (int i : perm) {
+                  auto [ql, qr] = queries[i];
+                  while (ql < l) metesaca(--l);
+                  while (r < qr) metesaca(r++);
+                  while (l < ql) metesaca(l++);
+                  while (qr < r) metesaca(--r);
+                  ans[i] = <respuesta>
+              }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \centering
+  \huge Gracias
+\end{frame}
