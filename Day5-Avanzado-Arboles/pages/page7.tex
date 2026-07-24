@@ -24,63 +24,42 @@
   \frametitle{Aristas livianas y pesadas: observaciones}
 
   \begin{block}{Observación clave}
-    En un camino nodo--raíz puede haber a lo sumo \(\log_2 N\) aristas livianas.
+    \begin{itemize}
+      \item El subarbol que cuelga de una arista liviana tiene tamaño a lo sumo la mitad del subarbol del nodo padre.
+      \item En un camino nodo--raíz puede haber a lo sumo \(\log_2 N\) aristas livianas.
+    \end{itemize}
   \end{block}
-
-  \begin{center}
-    \fbox{\parbox{0.85\textwidth}{\centering\vspace{1.5cm}\textit{[Diagrama: camino a la raíz con $\le \log_2 N$ aristas livianas]}\vspace{1.5cm}}}
-  \end{center}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Aristas livianas y pesadas: más observaciones}
+  \frametitle{Aristas livianas y pesadas: observaciones}
 
-  \begin{block}{Observación clave}
-    Claim similar para cantidad de caminos pesados que se tocan.
-  \end{block}
+  \centering
+  \includegraphics[height=0.65\textheight,keepaspectratio]{fotos/few-light.png}
 
-  \vspace{0.5em}
-
-  Otra forma de verlo: dado un camino cualquiera, puede tocar a lo sumo \(2 \log_2 N\) aristas livianas. A su vez, cada vez que toca una arista liviana cambia de camino pesado, por lo que puede tocar a lo sumo \(2 \log_2 N + 1\) caminos pesados distintos.
-
-  \vspace{0.5em}
-
-  O sea, un camino cualquiera se puede descomponer en ``pocas'' partes, cada una perteneciente a un camino pesado distinto.
+  \[
+  N \geq |u_1| > 2|v_1| > 2|u_2| > 4|v_2| > \dots > 2^k |v_k| \qquad |v_k| \geq 1 \\
+  \Rightarrow k \leq \log_2 N
+  \]
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Heavy-light decompose: código}
 
 \begin{lstlisting}
-int n;
-vector<int> g[maxn];
-
-int s[maxn]; // tamano del subarbol
-int p[maxn]; // padre (-1 si no tiene)
-int h[maxn]; // hijo pesado (-1 si no tiene)
-
-// calculo padres y tamanos de los subarboles
-void dfs(int u) {
-    s[u] = 1;
-    for (int v : g[u]) if (v != p[u]) {
-        p[v] = u;
-        dfs(v);
-        s[u] += s[v];
-    }
-}
-
-void decompose(int root) {
-    p[root] = -1;
-    dfs(root);
-
-    forn(u, n) {
-        h[u] = -1;
-        for (int v : g[u]) if (v != p[u]) {
-            if (h[v] == -1 || s[h[v]] < s[v]) {
-                h[u] = v;
+        int p[maxn]; // padre (-1 si no tiene)
+        int s[maxn]; // tamano del subarbol
+        int h[maxn]; // hijo pesado (-1 si no tiene)
+        
+        void decompose() {
+            forn(u, n) {
+                h[u] = -1;
+                for (int v : g[u]) if (v != p[u]) {
+                    if (h[v] == -1 || s[h[v]] < s[v]) {
+                        h[u] = v;
+                    }
+                }
             }
         }
-    }
-}
 \end{lstlisting}
 \end{frame}

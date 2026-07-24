@@ -1,58 +1,44 @@
 \begin{frame}
-  \frametitle{Distinct Colors: algoritmo tonto}
+  \frametitle{Distinct Colors}
 
   \begin{itemize}
-    \item Por cada nodo, metemos todos los valores del subárbol en un \texttt{set} y devolvemos \texttt{size()}.
-    \item Horrible: \(O(N^2)\).
+    \item Solucion Naive: Por cada nodo, metemos todos los valores del subárbol en un \texttt{set} y devolvemos \texttt{size()}.
+    \item Costo: \(O(N^2)\).
+    \item Para construir el conjunto de colores de un subarbol, podemos reutilizar el conjunto de colores de alguno de sus hijos. En particular, el del hijo pesado, ya que es el más grande.
+    \item Esto seguro es más rápido, pero ¿cambia el costo asintótico? Resulta que sí, veamos por qué.
   \end{itemize}
-\end{frame}
 
-\begin{frame}
-  \frametitle{Distinct Colors: truco}
-
-  \begin{itemize}
-    \item Después de armar el \texttt{set} de un subárbol, podemos pasárselo al padre para que no tenga que arrancar de cero.
-    \item ¿Cuál de todos los \texttt{set}s de los hijos va a preferir el padre? El más grande, así ahorra lo más posible.
-    \item O sea, el que viene del \textbf{hijo pesado}.
-    \item Ok, seguro es más rápido, pero ¿cambia el costo asintótico? ¡Sí!
-    \item Pero ¿por qué???
-  \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Distinct Colors: doble conteo}
 
-  Es un doble conteo.
-
-  \vspace{0.5em}
-
-  Imaginemos un programa que hace:
+Moralmente, nuestro programa hace esto:
 
 \begin{lstlisting}[language={},basicstyle=\ttfamily\small]
-for u = 1..n
-  for v : g[u]
-    if u-v es liviana
-      for w : subarbol(v)
-        print(w)
+    for u = 1..n
+      for v : g[u]
+        if u-v es liviana
+          for w : subarbol(v)
+            print(w, v, u)
 \end{lstlisting}
 
-  Contamos la cantidad de iteraciones del bucle interno:
+O sea, itera por los pares \(\{(u, w) \mid u \in V,\ w \in D(u)\}\), donde
 
-  \[
-    \bigl\{ (u,v,w) \mid u \in [1,n],\ u \text{ padre de } v,\ (u,v) \text{ liviana},\ w \in \text{subárbol}(v) \bigr\}
-  \]
+\centerline{$\displaystyle
+  D(u) = \{ \text{descendientes de } u \text{ que no están en el subárbol pesado} \}
+$}
 
-  La idea es pasarlo a:
+\smallskip
 
-  \[
-    \bigl\{ (u,v,w) \mid w \in [1,n],\ (u,v) \text{ liviana en el camino } w\text{-raíz} \bigr\}
-  \]
+Pero este es el mismo conjunto de pares que \(\{(u, w) \mid w \in V,\ u \in A(w)\}\), donde
 
-  Esto es claramente \(O(N \log N)\), porque por cada \(w\) hay solo \(\log_2(N)\) aristas pesadas en su camino a la raíz.
+\centerline{$\displaystyle
+  A(w) = \{ \text{ancestros de } w \text{ con arista liviana hacia } w \}
+$}
 
-  \begin{alertblock}{TODO}
-    Queda por verse cómo frasearlo bien.
-  \end{alertblock}
+El cual es claramente \(O(N \log N)\), porque por cada \(w\) hay solo \(\log_2(N)\) aristas livianas en su camino a la raíz.
+
 \end{frame}
 
 \begin{frame}[fragile]
