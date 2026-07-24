@@ -1,0 +1,166 @@
+\documentclass{beamer}
+%\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%\usepackage{lmodern}  % Use the Latin Modern font family
+
+\usepackage{latexsym,amsmath,xcolor,bm, amssymb, color, tikz, graphicx, amsthm, mathtools}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{hyperref}
+\usepackage{float}     
+\usepackage{CJKutf8}
+\usepackage{multicol}
+\usepackage{listings}
+
+\lstset{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=2,
+  columns=fullflexible,
+  keepspaces=true
+}
+
+\graphicspath{{../logos/}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\Tr}{Tr}
+
+\makeatletter
+\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
+\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+\def\eg{\emph{e.g}\onedot} 
+\def\Eg{\emph{E.g}\onedot}
+\def\ie{\emph{i.e}\onedot} 
+\def\Ie{\emph{I.e}\onedot}
+\def\cf{\emph{c.f}\onedot} 
+\def\Cf{\emph{C.f}\onedot}
+\def\etc{\emph{etc}\onedot} 
+\def\vs{\emph{vs}\onedot}
+\def\wrt{w.r.t\onedot} 
+\def\dof{d.o.f\onedot}
+\def\etal{\emph{et al}\onedot}
+\makeatother
+
+
+\usetheme{Madrid}
+\useinnertheme{circles}
+
+
+\definecolor{ColorUNLP}{HTML}{8c0011} 
+\usecolortheme[named=ColorUNLP]{structure}
+%\usecolortheme[named=ColorUNR]{exampleblock}
+
+%\setbeamertemplate{blocks}[rounded][shadow=true]
+%\setbeamercolor{block body}{fg=black,bg=white}
+
+
+
+%------------------------------------------------------------
+%This block of code defines the information to appear in the
+%Title page
+\title %optional
+{Árboles Recargados}
+
+\subtitle{(Consultas en subárboles y en caminos)}
+
+%\subtitle{with applications to persuation and lie production}
+% \author % (optional)
+% {Author Name}
+
+\author[Sebastián Mestre]{Sebastián Mestre}
+
+\institute[]{Universidad Nacional de Rosario - FCEIA}
+\date[TC 2026]{Training Camp 2026}
+\titlegraphic{\includegraphics[clip,height=2cm,keepaspectratio]{logoTC.pdf}}
+
+%End of title page configuration block
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+% \AtBeginSection inserts an automatic Outline slide at the start of
+% each \section{}, highlighting the current section. Change the
+% \section names below to your real topic names and these slides
+% will update automatically.
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+%------------------------------------------------------------
+
+
+\begin{document}
+
+%The next statement creates the title page.
+\frame{\titlepage}
+
+
+%------------------------------------------------------------
+% Frame de Sponsors, me parece mejor ponerlo al principio
+% Antes del índice/contenido
+
+% --- Organizadores y Sponsors ---
+\begin{frame}{Gracias Sponsors!}
+    \begin{columns}[t]
+        \column{0.5\textwidth}
+        \centering
+        Organiza\\
+        \vspace{0.5cm}
+        \includegraphics[width=0.6\textwidth,keepaspectratio]{logo_aapc.png}\\
+        \vspace{0.3cm}
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{unlp_informatica.png}
+        \column{0.5\textwidth}
+        \centering
+        Diamond Sponsor\\
+        \vspace{0.5cm}
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{GTSlogo.jpeg}
+    \end{columns}
+\end{frame}
+
+
+%---------------------------------------------------------
+%This block of code is for the table of contents after
+%the title page
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+%---------------------------------------------------------
+
+
+\setcounter{tocdepth}{2}
+
+\input{pages/page1}
+\input{pages/page2}
+\input{pages/page3.1}
+\input{pages/page3.2}
+\input{pages/page3.3}
+\input{pages/page3}
+\input{pages/page4}
+\input{pages/page5}
+\input{pages/page6}
+\input{pages/page7}
+\input{pages/page8}
+\input{pages/page9}
+\input{pages/page10}
+\input{pages/page11}
+\input{pages/page12}
+\input{pages/page13}
+\input{pages/page14}
+\input{pages/page15}
+\input{pages/page16}
+\input{pages/page17}
+\input{pages/page18}
+\input{pages/page18.1}
+
+\end{document}

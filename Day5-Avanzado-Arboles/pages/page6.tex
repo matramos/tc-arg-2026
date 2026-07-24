@@ -1,0 +1,33 @@
+\section{Aristas livianas y pesadas}
+
+\begin{frame}
+  \centering
+  \Huge Aristas livianas y pesadas
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ehad and the Big Finale (Codeforces 1174F)}
+
+  \begin{itemize}
+    \item Problema interactivo.
+    \item Hay un árbol con raíz que tiene un nodo especial secreto \(\star\).
+    \item \(N \le 10^5\).
+    \item Te dan el árbol pero no te dicen cuál es el nodo secreto.
+    \item Objetivo: descubrir el nodo secreto.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ehad and the Big Finale (Codeforces 1174F)}
+
+  \begin{itemize}
+    \item Para esto se pueden hacer dos tipos de consultas:
+    \begin{itemize}
+      \item \(d(u, \star)\): distancia de \(u\) al nodo especial.
+      \item \(s(u)\): siguiente nodo en el camino de \(u\) a \(\star\).
+    \end{itemize}
+    \item Solo se pueden hacer 36 consultas.
+    \item Solo se puede hacer la consulta \(s\) si \(u\) es ancestro de \(\star\).
+    \item (Sin esta restricción se puede resolver haciendo consultas \(s\) en los centroides.)
+  \end{itemize}
+\end{frame}

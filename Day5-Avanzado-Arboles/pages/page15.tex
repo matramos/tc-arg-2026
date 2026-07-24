@@ -1,0 +1,59 @@
+\subsection{Operaciones no conmutativas}
+
+\begin{frame}
+  \frametitle{Consultas no conmutativas}
+
+  El algoritmo de consultas en caminos funciona también para operaciones \textbf{no conmutativas} (por ejemplo, producto de matrices).
+
+  \vspace{0.75em}
+
+  \begin{itemize}
+    \item Guardamos pares con la suma de izquierda a derecha y la suma de derecha a izquierda.
+    \item En cada paso del algoritmo elegimos la dirección correcta según cuál punta del camino estamos resolviendo.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Consultas no conmutativas: estructuras}
+
+\begin{lstlisting}
+struct Mono {
+    static Mono neut() { /* ... */ }
+};
+Mono operator + (Mono x, Mono y);
+
+struct Conm {
+    Mono ltr, rtl;
+    static Conm make(Mono x) { return {x, x}; }
+    static Conm neut() { return {Mono::neut(), Mono::neut()}; }
+};
+Conm operator + (Conm x, Conm y) {
+    return {x.ltr + y.ltr, y.rtl + x.rtl};
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Consultas no conmutativas: \texttt{query}}
+
+\begin{lstlisting}
+Mono query(int u, int v) {
+  int tu = htop[u], tv = htop[v];
+  if (tu == tv) {
+    if (dep[u] < dep[v]) {
+      return tree[tu].query(dep[u]-dep[tu],dep[v]-dep[tu]+1).ltr;
+    } else {
+      return tree[tv].query(dep[v]-dep[tv],dep[u]-dep[tv]+1).rtl;
+    }
+  } else {
+    if (dep[tu] > dep[tv]) {
+      return tree[tu].query(0, dep[u]-dep[tu]+1).rtl
+           + query(p[tu], v);
+    } else {
+      return query(u, p[tv])
+           + tree[tv].query(0, dep[v]-dep[tv]+1).ltr;
+    }
+  }
+}
+\end{lstlisting}
+\end{frame}

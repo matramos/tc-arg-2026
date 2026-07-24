@@ -1,0 +1,15 @@
+\begin{frame}
+  \frametitle{Conteo doble}
+
+  \[
+    M_N(m) = \{ \text{múltiplos de } m \text{ menores o iguales a } N \}
+  \]
+
+  \[
+    \frac{1}{N} \sum_{m=1}^{N} |M_N(m)|
+    = \frac{1}{N} \sum_{m=1}^{N} \left\lfloor \frac{N}{m} \right\rfloor
+    \leq \frac{1}{N} \sum_{m=1}^{N} \frac{N}{m}
+    = \sum_{m=1}^{N} \frac{1}{m}
+    \in O(\log N)
+  \]
+\end{frame}

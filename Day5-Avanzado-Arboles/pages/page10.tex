@@ -1,0 +1,82 @@
+\begin{frame}
+  \frametitle{Distinct Colors: algoritmo tonto}
+
+  \begin{itemize}
+    \item Por cada nodo, metemos todos los valores del subárbol en un \texttt{set} y devolvemos \texttt{size()}.
+    \item Horrible: \(O(N^2)\).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Distinct Colors: truco}
+
+  \begin{itemize}
+    \item Después de armar el \texttt{set} de un subárbol, podemos pasárselo al padre para que no tenga que arrancar de cero.
+    \item ¿Cuál de todos los \texttt{set}s de los hijos va a preferir el padre? El más grande, así ahorra lo más posible.
+    \item O sea, el que viene del \textbf{hijo pesado}.
+    \item Ok, seguro es más rápido, pero ¿cambia el costo asintótico? ¡Sí!
+    \item Pero ¿por qué???
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Distinct Colors: doble conteo}
+
+  Es un doble conteo.
+
+  \vspace{0.5em}
+
+  Imaginemos un programa que hace:
+
+\begin{lstlisting}[language={},basicstyle=\ttfamily\small]
+for u = 1..n
+  for v : g[u]
+    if u-v es liviana
+      for w : subarbol(v)
+        print(w)
+\end{lstlisting}
+
+  Contamos la cantidad de iteraciones del bucle interno:
+
+  \[
+    \bigl\{ (u,v,w) \mid u \in [1,n],\ u \text{ padre de } v,\ (u,v) \text{ liviana},\ w \in \text{subárbol}(v) \bigr\}
+  \]
+
+  La idea es pasarlo a:
+
+  \[
+    \bigl\{ (u,v,w) \mid w \in [1,n],\ (u,v) \text{ liviana en el camino } w\text{-raíz} \bigr\}
+  \]
+
+  Esto es claramente \(O(N \log N)\), porque por cada \(w\) hay solo \(\log_2(N)\) aristas pesadas en su camino a la raíz.
+
+  \begin{alertblock}{TODO}
+    Queda por verse cómo frasearlo bien.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Distinct Colors: código}
+
+\begin{lstlisting}
+    vector<int> distintos() {
+        vector<int> ans(n);
+        unordered_set<int> s;
+        forn(f, n) if (h[f] == -1) {
+            int u = f;
+            while (true) {
+                s.insert(u);
+                for (int v : g[u]) if (v != p[u] && v != h[u])
+                    meter_todo(v, u, s);
+                ans[u] = s.size();
+                int w = p[u];
+                // corto al llegar al tope del camino pesado
+                if (w == -1 || h[w] != u) break;
+                u = w;
+            }
+            s.clear();
+        }
+        return ans;
+    }
+\end{lstlisting}
+\end{frame}
