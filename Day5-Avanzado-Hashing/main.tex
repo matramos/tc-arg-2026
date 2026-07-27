@@ -1,0 +1,961 @@
+\documentclass{beamer}
+%\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%\usepackage{lmodern}  % Use the Latin Modern font family
+
+\usepackage{latexsym,amsmath,xcolor,bm, amssymb, color, tikz, graphicx, amsthm, mathtools}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{CJKutf8}
+\usepackage{multicol}
+\usepackage{verbatim}
+
+\graphicspath{{../logos/}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\Tr}{Tr}
+
+\makeatletter
+\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
+\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+\def\eg{\emph{e.g}\onedot}
+\def\Eg{\emph{E.g}\onedot}
+\def\ie{\emph{i.e}\onedot}
+\def\Ie{\emph{I.e}\onedot}
+\def\cf{\emph{c.f}\onedot}
+\def\Cf{\emph{C.f}\onedot}
+\def\etc{\emph{etc}\onedot}
+\def\vs{\emph{vs}\onedot}
+\def\wrt{w.r.t\onedot}
+\def\dof{d.o.f\onedot}
+\def\etal{\emph{et al}\onedot}
+\makeatother
+
+
+\usetheme{Madrid}
+\useinnertheme{circles}
+
+
+\definecolor{ColorUNLP}{HTML}{8c0011}
+\usecolortheme[named=ColorUNLP]{structure}
+
+% Entornos de definición/teorema en castellano (beamer los rotula en inglés)
+\newtheorem{definicion}{Definición}
+\newtheorem{teorema}{Teorema}
+%\usecolortheme[named=ColorUNR]{exampleblock}
+
+%\setbeamertemplate{blocks}[rounded][shadow=true]
+%\setbeamercolor{block body}{fg=black,bg=white}
+
+
+
+%------------------------------------------------------------
+%This block of code defines the information to appear in the
+%Title page
+\title %optional
+{Hashing}
+
+\subtitle{Avanzado}
+
+%\subtitle{with applications to persuation and lie production}
+% \author % (optional)
+% {Author Name}
+
+\author[Lautaro Lasorsa]{Lautaro Lasorsa}
+
+\institute[]{Universidad Nacional de La Plata – Facultad de Informática}
+\date[TC 2026]{Training Camp 2026}
+\titlegraphic{\includegraphics[clip,height=2cm,keepaspectratio]{logoTC.pdf}}
+
+%End of title page configuration block
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+% \AtBeginSection inserts an automatic Outline slide at the start of
+% each \section{}, highlighting the current section. Change the
+% \section names below to your real topic names and these slides
+% will update automatically.
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+%------------------------------------------------------------
+
+
+\begin{document}
+
+
+%The next statement creates the title page.
+\frame{\titlepage}
+
+
+%------------------------------------------------------------
+% Frame de Sponsors, me parece mejor ponerlo al principio
+% Antes del índice/contenido
+
+% --- Organizadores y Sponsors ---
+\begin{frame}{Gracias Sponsors!}
+    \begin{columns}[t]
+        \column{0.5\textwidth}
+        \centering
+        Organiza\\
+        \vspace{0.5cm}
+        \includegraphics[width=0.6\textwidth,keepaspectratio]{logo_aapc.png}\\
+        \vspace{0.3cm}
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{unlp_informatica.png}
+        \column{0.5\textwidth}
+        \centering
+        Diamond Sponsor\\
+        \vspace{0.5cm}
+        \includegraphics[width=0.8\textwidth,keepaspectratio]{GTSlogo.jpeg}
+    \end{columns}
+\end{frame}
+
+
+%---------------------------------------------------------
+%This block of code is for the table of contents after
+%the title page
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+%---------------------------------------------------------
+
+
+% ============================================================
+% CONTENIDO — Hashing (Avanzado) — TC Argentina 2026, Día 5
+% ============================================================
+
+% ------------------------------------------------------------
+\section{Introducción y motivación}
+
+\begin{frame}{Problemas que veremos cómo resolver con Hashing}
+Todos son más difíciles de resolver con otras técnicas:
+\begin{enumerate}
+    \item \textbf{Composición de subarreglos:} muchas queries ``¿los subarreglos $[l_1,r_1]$ y $[l_2,r_2]$ tienen el mismo \emph{multiconjunto} de valores?'' en $\mathcal{O}(1)$.\\
+    {\small\textbf{No es un string} $\Rightarrow$ Suffix Array no aplica; ordenar cada query es $\mathcal{O}(n)$.}
+    \item \textbf{Igualdad de substrings con updates:} comparar $s[a..a{+}L]$ vs $s[b..b{+}L]$ intercalado con ``cambiar $s[i]=c$''.\\
+    {\small\textbf{Suffix Array/Automaton no soportan updates.}}
+    \item \textbf{Contar subárboles distintos} (isomorfismo de subárboles enraizados).\\
+    {\small\textbf{No hay ``suffix array de árboles''}; hace falta una forma canónica de la estructura.}
+\end{enumerate}
+\end{frame}
+
+% ------------------------------------------------------------
+\section{El monoide de hash sobre strings}
+
+\begin{frame}{La primitiva: el monoide $\{h, b\}$}
+\begin{definicion}[Hash polinomial de un string $s$]
+\[
+H(s) = \sum_{i=0}^{|s|-1} s[i]\cdot P^{\,i} \pmod M,
+\qquad s[i] = c - \texttt{'a'} + 1 \ (\text{nunca } 0).
+\]
+\end{definicion}
+{\small Si $\texttt{'a'}\to 0$: \texttt{"a"}, \texttt{"aa"}, \texttt{"aaa"} $\to 0$, todos colisionan.}
+\begin{definicion}[Par-monoide $\{h,b\}$]
+\[
+\{h, b\}: \quad h = \sum s[i]\cdot P^{\,i}, \qquad b = P^{\,|s|}.
+\]
+Concatenación $a * c = \{\,a.h + a.b\cdot c.h,\ \ a.b\cdot c.b\,\}$:
+asociativa, \textbf{no} conmutativa, neutro $\{0,1\}$.
+\end{definicion}
+\end{frame}
+
+\begin{frame}[fragile]{$\{h,b\}$: código}
+\begin{exampleblock}{Módulo de Mersenne $2^{61}-1$ y \texttt{mulmod} vía \texttt{\_\_int128}}
+{\small
+\begin{verbatim}
+const ll B   = 131;                   // base
+const ll MOD = 2305843009213693951LL; // modulo 2^61 - 1
+inline ll mulmod(ll a, ll b) {
+    return (ll)((__int128)a * b % MOD);
+}
+struct UnitHash {
+    ll h, b;
+    UnitHash() : h(0), b(1) {}          // neutro ""
+    UnitHash(ll h_, ll b_) : h(h_), b(b_) {}
+};
+// concatenacion: s seguido de t
+UnitHash operator*(const UnitHash& s, const UnitHash& t) {
+    return UnitHash((s.h + mulmod(s.b, t.h)) % MOD,
+                     mulmod(s.b, t.b));
+}
+\end{verbatim}
+}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Tabla aditiva de prefijos... y su trampa}
+Precomputamos $H[i] = \text{hash}(s[0..i))$ acumulando $s[i{-}1]\cdot P^{\,i-1}$: la ``tabla aditiva'' de $S$.
+\begin{block}{Para el hash de $s[i..j)$ hay que \textbf{quitar el prefijo} $s[0..i)$}
+La resta cruda $H[j] - H[i]$ queda \textbf{desalineada} por un factor $P^{\,i}$: ambos hashes pesan $s[k]$ por $P^{\,k}$ (potencia absoluta), así que $H[j]-H[i]$ \emph{no} es el hash de $s[i..j)$.
+\end{block}
+Necesitamos algo mejor: dividir, no restar.
+\end{frame}
+
+\begin{frame}{Extensión sancionada: $\{h,b,binv\}$ y el operador $/$}
+\begin{definicion}[Terna $\{h,b,binv\}$]
+Extensión \textbf{mínima} del \texttt{UnitHash} anterior con un tercer campo $binv = P^{-|s|}$ (inverso modular de $b$); neutro $\{0,1,1\}$.
+\end{definicion}
+\begin{definicion}[División: quitar un prefijo en $\mathcal{O}(1)$]
+Si $h_1$ es \textbf{prefijo} de $h_2$:
+\[
+\{h_2,b_2,bi_2\} \,/\, \{h_1,b_1,bi_1\}
+= \{\,(h_2 - h_1)\cdot bi_1,\ \ b_2\cdot bi_1,\ \ bi_2\cdot b_1\,\}
+\]
+devuelve el hash del \textbf{sufijo} que queda al remover el prefijo $h_1$.
+\end{definicion}
+Propiedades: $x / x = \{0,1,1\}$ (neutro). Si $h_1$ \emph{no} es prefijo de $h_2$, el resultado \textbf{no tiene valor} (no usarlo).
+\end{frame}
+
+\begin{frame}{Hash de substring en $\mathcal{O}(1)$, sin inversos por consulta}
+\begin{block}{Resultado}
+\[
+\text{hash}\big(s[i..j)\big) \;=\; H[j] \,/\, H[i]
+\]
+\end{block}
+\begin{itemize}
+    \item El $binv$ ya viaja \emph{dentro} del monoide: no calculamos inversos por consulta.
+    \item Equivalente al enfoque ``arrays planos $+$ inverso modular'', pero más limpio y \textbf{componible}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{BinPow sobre el monoide: $S^k$ en $\mathcal{O}(\log k)$}
+Al ser monoide, concatenar un string consigo mismo $k$ veces sale con exponenciación binaria (la operación \texttt{repeated}).
+\begin{exampleblock}{\texttt{repeated}: $S^k$ por exponenciación binaria}
+\begin{verbatim}
+UnitHash repeated(const UnitHash& s, long long n) {
+    UnitHash res;          // neutro = ""
+    UnitHash base = s;
+    while (n > 0) {
+        if (n & 1) res = res * base;
+        base = base * base;
+        n >>= 1;
+    }
+    return res;
+}
+\end{verbatim}
+\end{exampleblock}
+Aplicación directa: decidir $S^p == T^q$ comparando \verb|repeated(Hash(S), p) == repeated(Hash(T), q)|.
+\end{frame}
+
+\begin{frame}[fragile]{Aplicación: comparar $A^p$ vs $B^q$ lexicográficamente}
+\begin{block}{Enunciado}
+Dados $A,B$ y exponentes $p,q\ge 1$, decidir si $A^p < B^q$ (orden lexicográfico) \textbf{sin materializar} las repeticiones (hasta $\sim 10^{18}$ caracteres).
+\end{block}
+\pause
+El carácter en la posición $\ell$ de $X^e$ es $X[\ell\bmod|X|]$; el hash del prefijo de longitud $\ell$ sale del monoide $+$ binpow.
+{\scriptsize
+\begin{verbatim}
+// hash del prefijo de longitud L de X^e (X con prefijos HX)
+UnitHash pref(vector<UH>& HX, ll L) {
+    ll m = (ll)HX.size() - 1;              // m = |X|
+    return repeated(HX[m], L / m) * HX[L % m];
+}
+// LCP de A^p y B^q por busqueda binaria: O(log^2)
+ll lo = 0, hi = min(p * (ll)A.size(), q * (ll)B.size()) + 1;
+while (hi - lo > 1) {        // [lo, hi): ok(lo), !ok(hi)
+    ll mid = (lo + hi) / 2;
+    if (pref(HA, mid) == pref(HB, mid)) lo = mid;
+    else hi = mid;
+}
+\end{verbatim}
+}
+Con el LCP $=\ell$: si $\ell$ agota al más corto, gana el más corto; si no, comparar $A[\ell\bmod|A|]$ vs $B[\ell\bmod|B|]$. Total $\mathcal{O}(|A|+|B|+\log^2)$.
+\end{frame}
+
+\begin{frame}[fragile]{``Hashing mata todo'' (showcase): LCP en $\mathcal{O}(\log N)$}
+Con el monoide solo: dos strings comparten un prefijo de longitud $L$ sii $H_1[L] = H_2[L]$ $\Rightarrow$ LCP por búsqueda binaria.
+\begin{exampleblock}{LCP por búsqueda binaria}
+\begin{verbatim}
+using vh = vector<UnitHash>;   // h[k] = hash(s[0..k))
+int lcp(vh& h1, vh& h2) {
+    int lo = 0, hi = (int)min(h1.size(), h2.size());
+    while (hi - lo > 1) { // [lo,hi): ok(lo), !ok(hi)
+        int mid = (lo + hi) / 2;
+        if (h1[mid] == h2[mid]) lo = mid;
+        else hi = mid;
+    }
+    return lo;  // mayor L con h1[L]==h2[L]
+}
+\end{verbatim}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Comparador $<$ por hashing}
+Con el LCP: comparador lexicográfico en $\mathcal{O}(\log N)$ (LCP $+$ primer carácter distinto; centinela \texttt{'\textbackslash 0'} al terminar). Cada sufijo son dos vistas sin copiar.
+{\scriptsize
+\begin{verbatim}
+using UH  = UnitHash;
+using Suf = pair<span<UH>, string_view>;  // (hashes, texto)
+
+// hash de los primeros L del sufijo = H[L] / H[0]
+int lcp(const Suf& a, const Suf& b) {  // mayor L con pref. iguales
+    int lo = 0, hi = (int)min(a.first.size(), b.first.size());
+    while (hi - lo > 1) {         // [lo, hi): ok(lo), !ok(hi)
+        int m = (lo + hi) / 2;
+        if ((a.first[m]/a.first[0]).h ==
+            (b.first[m]/b.first[0]).h) lo = m;
+        else hi = m;
+    }
+    return lo;
+}
+bool comp(const Suf& a, const Suf& b) {    // a < b lexicografico
+    int l = lcp(a, b);
+    // '\0': innecesario aca, pero deja comp generica
+    char ca = l < (int)a.second.size() ? a.second[l] : '\0';
+    char cb = l < (int)b.second.size() ? b.second[l] : '\0';
+    return ca < cb;
+}
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}[fragile]{Suffix Array: ordenar los índices de los sufijos}
+\begin{exampleblock}{Generación (cero copias) y ordenamiento de índices}
+{\scriptsize
+\begin{verbatim}
+// H[k] = hash(s[0..k)) como UnitHash (prefijos)
+vector<UH> H = hashPrefijos(s);
+int n = (int)s.size();
+vector<Suf> suf(n);
+for (int i = 0; i < n; i++)
+    suf[i] = { span<UH>(H).subspan(i),
+               string_view(s).substr(i) };  // vistas, no copian
+
+// ordenamos los INDICES, no los pares (Suf)
+vector<int> ord(n);
+iota(ord.begin(), ord.end(), 0);
+sort(ord.begin(), ord.end(), [&](int i, int j){
+    return comp(suf[i], suf[j]);
+});
+\end{verbatim}
+}
+\end{exampleblock}
+Suffix Array en $\mathcal{O}(n\log^2 n)$ \textbf{sin} implementar la construcción específica (duplicación de órdenes $+$ \emph{counting sort}, $\mathcal{O}(n\log n)$).
+\end{frame}
+
+\begin{frame}{Síntesis}
+\begin{block}{Un solo monoide reemplaza Trie y Suffix Array}
+Con una fracción del código. Es una ventaja de \textbf{implementación}, no de complejidad: es probabilístico y paga un $\log$ extra.
+\end{block}
+Enlaza con \S3: hay que hacerlo bien (colisiones).
+\begin{block}{Señal de reconocimiento}
+Comparar / igualar / ordenar segmentos de una secuencia, o potencias/repeticiones de un string $\to$ monoide de hash ($+$ binpow, $+$ búsqueda binaria para LCP).
+\end{block}
+\end{frame}
+
+\begin{frame}{Aplicación (para pensar): períodos de substrings}
+Dado $s$ y $q$ consultas $(l, r, k)$: decidir si $s[l..r]$ es una \textbf{potencia} de su bloque inicial de longitud $k$, es decir $s[l..r] = \big(s[l..l{+}k{-}1]\big)^{(r-l+1)/k}$. Con $n, q \le 2\cdot 10^5$. ¿Cómo responder cada consulta en $\mathcal{O}(1)$?
+\pause
+\begin{block}{Solución}
+\footnotesize
+$s[l..r] = \text{bloque}^m$ sii se cumplen \textbf{las dos}:
+\begin{enumerate}
+    \item \textbf{Divisibilidad:} $k \mid (r-l+1)$.
+    \item \textbf{Período $k$ en el rango:} equivale a la igualdad de los substrings \emph{solapados} $s[l..r{-}k] = s[l{+}k..r]$, que el hash decide en $\mathcal{O}(1)$ con la tabla de prefijos.
+\end{enumerate}
+Ninguna sola alcanza: la divisibilidad no fuerza que los bloques coincidan; el solapamiento sin divisibilidad deja un bloque parcial.
+\end{block}
+\end{frame}
+
+\begin{frame}{Bonus: período, solapamiento y potencia}
+\footnotesize
+\begin{definicion}[Período]
+$s[l..r]$ tiene período $k$ si $s[i] = s[i+k]$ para todo $i \in [l, r-k]$.
+\end{definicion}
+\textbf{Período $\iff$ igualdad solapada.} Escribir esas $r-k-l+1$ igualdades carácter a carácter, todas juntas, es exactamente
+\[ s[l..r{-}k] \;=\; s[l{+}k..r] \]
+Es una reescritura, no un teorema: por eso el hash la decide de una.
+\begin{teorema}[Período $+$ divisibilidad $\Rightarrow$ potencia]
+Si $s[l..r]$ tiene período $k$ y $k \mid (r-l+1)$, entonces $s[l..r] = \big(s[l..l{+}k{-}1]\big)^{m}$ con $m = (r-l+1)/k$.
+\end{teorema}
+El período dice que cada bloque de largo $k$ es igual al anterior; la divisibilidad garantiza que el último está \textbf{completo}. Sin ella queda un bloque parcial: \texttt{"abcab"} tiene período $3$ pero no es potencia de \texttt{"abc"}.
+\end{frame}
+
+\begin{frame}{Aplicación (para pensar): substring común mayor}
+Dados $N$ strings cuya longitud total es $T$, decidir la mayor longitud posible de un string $L$ que es substring (contiguo) de todos los strings.
+    \pause
+\begin{block}{Solución}
+\footnotesize
+\textbf{Búsqueda binaria} sobre la longitud $L$ del substring común.
+\begin{itemize}
+    \item \texttt{ok(L)}: partir del conjunto de hashes de los substrings de largo $L$ del primer string e intersecarlo con el de cada string siguiente, cortando si queda vacío. Cuesta $\mathcal{O}(T)$.
+    \item \textbf{Monótono:} si hay uno común de largo $L$, sus substrings de largo $L-1$ también son comunes.
+    \item Buscar sobre $[0, m+1)$ con $m$ el largo mínimo, invariante \texttt{ok(lo)} / \texttt{!ok(hi)}: devuelve \texttt{lo} en $\mathcal{O}(T \log m)$.
+\end{itemize}
+\end{block}
+\textbf{Nota:} También sale con Suffix Array $+$ Union Find, en $\mathcal{O}(T\log T)$.
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Corrección: cuándo miente el hash}
+
+\begin{frame}{Motivación}
+\begin{definicion}[Colisión]
+Dos objetos distintos con el mismo hash.
+\end{definicion}
+\begin{block}{Por qué importa}
+Una colisión produce un \textbf{WA silencioso} (no un TLE ni un RTE). El riesgo es mayor cuando se comparan muchos objetos entre sí (régimen \emph{todos contra todos}).
+\end{block}
+\end{frame}
+
+\begin{frame}{Probabilidad de colisión: los tres regímenes}
+\footnotesize
+Lo que importa es $\Pr[\text{al menos una colisión}]$. Se calcula bajo el modelo ideal: $h$ uniforme sobre $M$ valores e independiente para objetos distintos.
+\begin{itemize}
+    \item \textbf{Un par} $x \neq y$: fijado $h(x)$, exactamente un valor de $M$ es malo.
+    \[ \Pr[\ge 1] = \frac{1}{M} \]
+    \pause
+    \item \textbf{Un objeto contra $k$}: condicionando en $h(x) = v$, los $k$ eventos $h(y_i) = v$ sí son independientes y cada uno se evita con probabilidad $1 - 1/M$.
+    \[ \Pr[\ge 1] = 1 - \left(1-\frac{1}{M}\right)^{k} \;\le\; \frac{k}{M} \]
+    \pause
+    \item \textbf{Todos contra todos} ($k$ objetos): los eventos por par ya no son independientes, porque $h(x_1) = h(x_2)$ y $h(x_1) = h(x_3)$ fuerzan $h(x_2) = h(x_3)$. El complemento se cuenta insertando los objetos de a uno.
+    \[ \Pr[\ge 1] = 1 - \prod_{i=1}^{k-1}\left(1 - \frac{i}{M}\right) \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Todos contra todos: paradoja del cumpleaños}
+El producto sale de la regla de la \textbf{probabilidad compuesta}: al insertar el objeto $i+1$ hay exactamente $i$ valores ocupados distintos (condicionado a que no hubo colisión antes), así que sobrevive con probabilidad $(M-i)/M$.
+\pause
+\begin{teorema}[Acotación por ambos lados]
+Definiendo $C = \dfrac{k(k-1)}{2M} \approx \dfrac{k^2}{2M}$:
+\[ 1 - e^{-C} \;\le\; \Pr[\ge 1] \;\le\; C \]
+\end{teorema}
+\end{frame}
+
+\begin{frame}{Bonus: de dónde sale la cota inferior $1 - e^{-C}$}
+\scriptsize
+\setlength{\abovedisplayskip}{2pt}
+\setlength{\belowdisplayskip}{2pt}
+\setlength{\abovedisplayshortskip}{4pt}
+\setlength{\belowdisplayshortskip}{4pt}
+\begin{block}{Desigualdad elemental}
+Para todo $x$ real vale $1 - x \le e^{-x}$: la recta $1-x$ es tangente en el origen a la convexa $e^{-x}$. Formalmente, $f(x) = e^{-x} - (1-x)$ cumple $f(0) = 0$ y $f'(x) = 1 - e^{-x}$, negativa para $x<0$ y positiva para $x>0$, así que su mínimo es $0$.
+\end{block}
+\textbf{Paso 1.} Aplicarla con $x = i/M$ a cada uno de los $k-1$ factores del producto exacto.
+\[ 1 - \frac{i}{M} \;\le\; e^{-i/M} \qquad i = 1, \dots, k-1 \]
+\textbf{Paso 2.} Multiplicar las $k-1$ desigualdades, válido porque todos los factores son no negativos ($i < M$; si $k > M$ la colisión es segura por palomar).
+\[ \Pr[\text{sin colisión}] = \prod_{i=1}^{k-1}\left(1-\frac{i}{M}\right) \;\le\; \prod_{i=1}^{k-1} e^{-i/M} \]
+\textbf{Paso 3.} Los exponentes se suman, y la suma de Gauss $\sum_{i=1}^{k-1} i = \binom{k}{2} = \frac{k(k-1)}{2}$ produce exactamente $C$.
+\[ \prod_{i=1}^{k-1} e^{-i/M} = \exp\left(-\frac{1}{M}\sum_{i=1}^{k-1} i\right) = \exp\left(-\frac{k(k-1)}{2M}\right) = e^{-C} \]
+\textbf{Paso 4.} Complementar invierte el sentido de la desigualdad.
+\[ \Pr[\ge 1] = 1 - \Pr[\text{sin colisión}] \;\ge\; 1 - e^{-C} \]
+\end{frame}
+
+\begin{frame}{Bonus: lectura de las dos cotas}
+\footnotesize
+La cota superior $e^{-C}$ sobre $\Pr[\text{sin colisión}]$ es \textbf{optimista}: sobreestima cada factor del producto. La probabilidad real de no colisionar es todavía menor y, por lo tanto, la de colisionar es todavía mayor que $1 - e^{-C}$. Por eso sirve como garantía pesimista: si $1 - e^{-C}$ ya resulta alto, el riesgo real es peor.
+\begin{block}{Dos caminos independientes}
+La otra mitad del sándwich, $\Pr[\ge 1] \le C$, se obtiene por un argumento distinto: la cota de la unión, que suma $1/M$ sobre los $\binom{k}{2}$ pares. No toca el producto ni supone independencia entre los eventos, y por eso es la que sobrevive fuera del modelo ideal.
+\[ 1 - e^{-C} \;\le\; \Pr[\ge 1] \;\le\; C \]
+\end{block}
+Ambos extremos usan la misma cantidad $C$, y como $1 - e^{-C} \le C$ para todo $C \ge 0$, el intervalo nunca es vacío. Cuando $C \ll 1$ se cierra: $1 - e^{-C} \approx C$.
+\end{frame}
+
+\begin{frame}{Cuántos objetos tolera cada módulo}
+\footnotesize
+El quiebre está en $\sqrt{M}$, no en $M$: en eso consiste la paradoja. Despejando $k$ del sándwich, $\Pr[\ge 1] = 1/2$ pide $C = \ln 2$ y una confianza $\Pr[\ge 1] = \varepsilon \ll 1$ pide $C \approx \varepsilon$:
+\[ k_{1/2} \approx \sqrt{2\ln 2 \cdot M} \approx 1{,}18\sqrt{M}, \qquad k_{\varepsilon} \approx \sqrt{2\varepsilon M} \]
+\pause
+Máximo $k$ admisible para cada nivel de riesgo:
+\begin{center}
+\begin{tabular}{l r r}
+\textbf{Módulo} & $\Pr[\ge 1] = 1/2$ & $\Pr[\ge 1] = 10^{-4}$ \\
+\hline
+$M \approx 10^9$ & $\approx 3{,}7 \times 10^{4}$ & $\approx 4{,}5 \times 10^{2}$ \\
+$M = 2^{61}-1$ & $\approx 1{,}8 \times 10^{9}$ & $\approx 2{,}1 \times 10^{7}$ \\
+Doble hash, $M_1 M_2 \approx 10^{18}$ & $\approx 1{,}2 \times 10^{9}$ & $\approx 1{,}4 \times 10^{7}$ \\
+\end{tabular}
+\end{center}
+\pause
+\begin{itemize}
+    \item La columna de $10^{-4}$ es la que corresponde a \textbf{enviar} una solución.
+    \item Exigirla en lugar de una moneda al aire solo divide el umbral por $\approx 83$: ambos escalan con $\sqrt{M}$.
+    \item Con $M \approx 10^9$ y $k = 10^6$ resulta $C = 500$: la colisión es \textbf{prácticamente segura}.
+    \item Comparar muchos conjuntos, estados o subárboles entre sí cae \textbf{siempre} en este régimen.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Elección de módulo: nunca $2^{64}$}
+\begin{itemize}
+    \item Usar un \textbf{primo grande}, no potencias de 2.
+    \item \textbf{Nunca $2^{64}$} (overflow natural de \texttt{unsigned long long}): el ataque de \textbf{Thue--Morse} rompe cualquier base impar de forma \emph{determinista} (sin conocer la base elegida).
+\end{itemize}
+\begin{block}{Dos soluciones seguras}
+\begin{enumerate}
+    \item \textbf{Mersenne $2^{61}-1$} con \texttt{mulmod} vía \texttt{\_\_int128} (ya visto).
+    \item \textbf{Doble hashing:} \texttt{pair<ll,ll>} con dos $(base, m\acute{o}dulo)$ independientes $\to$ colisión $\approx 1/(M_1 M_2) \approx 10^{-18}$.
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Anti-hash tests: aleatorizar la base}
+El único cambio sobre el código ya visto: \textbf{base aleatoria en runtime}.
+\begin{exampleblock}{Semilla de alta resolución}
+\begin{verbatim}
+mt19937_64 rng(
+    chrono::steady_clock::now().time_since_epoch().count());
+// base aleatoria: distinta en cada corrida del binario
+ll B = 131 + rng() % (MOD - 200);
+\end{verbatim}
+\end{exampleblock}
+\begin{itemize}
+    \item El hacker no conoce los parámetros antes de que corra tu binario $\to$ no puede construir colisiones a propósito.
+    \item \textbf{Evitar} \texttt{std::rand()} y \texttt{time(0)} (adivinable).
+\end{itemize}
+\begin{block}{Señal de reconocimiento}
+Insertar muchos hashes en un \texttt{set}/\texttt{map}, o comparar de a pares muchísimas veces, implica estar en $k^2/2M$: hace falta $2^{61}{-}1$ o doble hash, y base aleatoria si hay hacking.
+\end{block}
+\end{frame}
+
+\begin{frame}{Aplicación (para pensar): elegir parámetros seguros}
+Un problema pide contar cuántos de los $\approx 10^6$ substrings de longitud fija $L$ de un texto son \textbf{distintos}, insertando sus hashes en un \texttt{set}. El juez tiene \textbf{fase de hacking}. ¿Qué esquema de parámetros es adecuado?
+\pause
+\begin{block}{Solución}
+\footnotesize
+\begin{itemize}
+    \item Régimen \textbf{todos-contra-todos}: $\approx 10^6$ hashes comparados entre sí $\Rightarrow$ vale $k^2/2M$.
+    \item Hace falta $\sim 61$ bits ($2^{61}{-}1$) o \textbf{doble hash}: un solo primo $\approx 10^9{+}7$ da $\approx 500$ colisiones esperadas.
+    \item Hay hacking $\Rightarrow$ \textbf{base aleatoria en runtime}. Base fija es atacable, y $2^{64}$ está roto de forma determinista (Thue--Morse, sin conocer la base).
+    \item Materializar y ordenar los substrings cuesta $\mathcal{O}(nL)$: demasiado lento.
+\end{itemize}
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Conjuntos y multiconjuntos}
+
+\begin{frame}{Aplicación 1: colecciones invariantes al orden}
+\begin{block}{Enunciado}
+Decidir si dos colecciones de elementos son \textbf{iguales} (mismos elementos, ignorando el orden) en $\mathcal{O}(1)$, soportando además operaciones entre ellas: \textbf{agregar}/\textbf{quitar} un elemento, \textbf{unión}, comparación de sub-rangos, etc.
+\end{block}
+\pause
+\textbf{Por qué hashing gana:} no hay estructura de strings que sirva; comparar composición de colecciones es $\mathcal{O}(\text{tamaño})$ salvo que colapses la colección a un número \textbf{invariante al orden}.
+\pause
+\begin{definicion}[Fingerprint de conjunto y de multiconjunto]
+Se asigna un valor aleatorio de 64 bits $r(x)$ por elemento (\texttt{splitmix64}) y se combinan los de la colección:
+\begin{itemize}
+    \item \textbf{Conjunto} (importa presencia): con \textbf{XOR}.
+    \item \textbf{Multiconjunto} (importa multiplicidad): con \textbf{suma} (mód $2^{64}$).
+\end{itemize}
+XOR y suma son conmutativas y asociativas $\Rightarrow$ el fingerprint no depende del orden.
+\end{definicion}
+\end{frame}
+
+\begin{frame}[fragile]{splitmix64: id aleatorio determinista por elemento}
+\begin{exampleblock}{Adaptado de neal, CF blog 62393 (splitmix64: S. Vigna)}
+{\footnotesize
+\begin{verbatim}
+uint64_t splitmix64(uint64_t x) {
+    x += 0x9e3779b97f4a7c15;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
+    return x ^ (x >> 31);
+}
+// semilla fija por corrida (no time(0): adivinable)
+const uint64_t SEED =
+    chrono::steady_clock::now().time_since_epoch().count();
+// id de x: mezcla aplicada directo, sin map/cache
+uint64_t getRand(uint64_t x) {
+    return splitmix64(x + SEED);
+}
+\end{verbatim}
+}
+\end{exampleblock}
+Fingerprint de la colección: \textbf{XOR} (conjuntos) o \textbf{suma} (multiconjuntos) de \texttt{getRand} sobre sus elementos.
+\end{frame}
+
+\begin{frame}[fragile]{Prefijos XOR / suma: subarreglos en $\mathcal{O}(1)$}
+\begin{verbatim}
+// Conjunto (presencia): prefijos XOR
+vector<uint64_t> pxor(n + 1, 0);
+for (int i = 0; i < n; i++)
+    pxor[i + 1] = pxor[i] ^ getRand(a[i]);
+
+// Multiconjunto (multiplicidad): prefijos suma
+vector<uint64_t> psum(n + 1, 0);
+for (int i = 0; i < n; i++)
+    psum[i + 1] = psum[i] + getRand(a[i]);
+// multiconjunto de [l, r) = psum[r] - psum[l]
+\end{verbatim}
+\textbf{Cuidado con XOR y paridad:} $r(x)\oplus r(x)=0$; un valor con multiplicidad \emph{par} se cancela. Para multiconjuntos usar \textbf{suma} (o un \texttt{set} auxiliar). Esto resuelve el primer problema de la introducción.
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Strings módulo rotación: traza de matrices}
+
+\begin{frame}{Aplicación 2: strings módulo rotación}
+\begin{block}{Enunciado}
+Decidir si dos substrings son \textbf{rotación} uno del otro (\texttt{"abcab"} $\sim$ \texttt{"cabab"}), en $\mathcal{O}(1)$ por consulta.
+\end{block}
+\pause
+\textbf{Falta un invariante ciego a la rotación y sensible a todo lo demás.} Las dos que ya tenemos fallan por extremos opuestos:
+\begin{itemize}
+    \item Hash \textbf{polinomial} (\S2): sensible al orden $\to$ separa rotaciones que deberían ser iguales.
+    \item Fingerprint de \textbf{multiconjunto} (\S4): ignora el orden \emph{por completo} $\to$ identifica anagramas que no son rotación.
+\end{itemize}
+\pause
+\begin{definicion}[Hash rotacional por traza]
+Una matriz aleatoria $R_c \in \mathbb{Z}_M^{\,d\times d}$ por carácter ($d = 3$). Para $s = s_0\cdots s_{n-1}$:
+\[
+R(s) = R_{s_0}R_{s_1}\cdots R_{s_{n-1}}, \qquad h(s) = \operatorname{tr} R(s).
+\]
+\end{definicion}
+\end{frame}
+
+\begin{frame}{Por qué la traza no ve la rotación}
+\begin{itemize}
+    \item \textbf{Rotar $=$ conjugar.} Mover $s_0$ al final transforma $R \mapsto R_{s_0}^{-1} R\, R_{s_0}$: el mismo producto leído desde otro punto del ciclo.
+    \item \textbf{La traza no distingue conjugados:} $\operatorname{tr}(AB) = \operatorname{tr}(BA) \Rightarrow \operatorname{tr}(P^{-1}RP) = \operatorname{tr}(R)$.
+    \item \textbf{Colisión $\le n/M$}: mismo argumento de Schwartz--Zippel de \S3.
+\end{itemize}
+\pause
+\begin{block}{Requisitos: $d \ge 3$ y matrices densas}
+\begin{itemize}
+    \item $d = 1$: el producto conmuta $\to$ colapsa al fingerprint de multiconjunto.
+    \item $d = 2$: la traza de un producto no cambia al invertir el orden $\to$ colisionan los \textbf{reversos}.
+    \item Entradas \textbf{diagonales o triangulares}: la traza depende solo del conteo por carácter. Las $d^2$ entradas van independientes.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Traza de matrices: código}
+Reusa \texttt{MOD} y \texttt{mulmod} (\S2), \texttt{getRand} (\S4).
+{\scriptsize
+\begin{verbatim}
+const int D = 3;               // D >= 3 (ver requisitos)
+struct Mat { ll a[D][D]; };    // DxD sobre Z_MOD
+Mat operator*(const Mat& x, const Mat& y) {
+    Mat z{};
+    for (int i = 0; i < D; i++) for (int k = 0; k < D; k++) {
+        ll v = x.a[i][k];
+        for (int j = 0; j < D; j++)
+            z.a[i][j] = (z.a[i][j] + mulmod(v, y.a[k][j])) % MOD;
+    }
+    return z;
+}
+ll tr(const Mat& m) {          // la traza es el hash
+    ll s = 0;
+    for (int i = 0; i < D; i++) s = (s + m.a[i][i]) % MOD;
+    return s;
+}
+Mat R[256];                    // matriz aleatoria por caracter
+void initMats() {
+    for (int c = 0, k = 0; c < 256; c++)
+        for (int i = 0; i < D; i++) for (int j = 0; j < D; j++)
+            R[c].a[i][j] = getRand(k++) % MOD;   // k inyectivo
+}
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}{El monoide $\{R, R^{-1}\}$ y el operador $/$}
+Mismo empaquetado que en \S2, con matrices.
+\begin{definicion}[Par-monoide $\{R, R^{-1}\}$]
+\[
+\{R,\ R^{-1}\}(s) = \{\, R_{s_0}\cdots R_{s_{n-1}},\ \ R_{s_{n-1}}^{-1}\cdots R_{s_0}^{-1} \,\}
+\]
+Concatenación $a * c = \{\, a.R\cdot c.R,\ \ c.R^{-1}\cdot a.R^{-1} \,\}$: asociativa, \textbf{no} conmutativa, neutro $\{I, I\}$.
+\end{definicion}
+\pause
+\begin{definicion}[División: quitar un prefijo en $\mathcal{O}(1)$]
+Si $a$ es \textbf{prefijo} de $b$:
+\[
+b \,/\, a = \{\, a.R^{-1}\cdot b.R,\ \ b.R^{-1}\cdot a.R \,\}
+\]
+es el par del \textbf{sufijo} restante.
+\end{definicion}
+El hash es $\operatorname{tr}$ del primer campo. A diferencia de $binv$, acá $R^{-1}$ invierte al hash mismo: es un \textbf{grupo}.
+\end{frame}
+
+\begin{frame}{Substrings módulo rotación en $\mathcal{O}(1)$}
+\begin{block}{Resultado}
+Con la tabla de prefijos $H[i] = \{R,R^{-1}\}\big(s[0..i)\big)$:
+\[
+h\big(s[i..j)\big) = \operatorname{tr}\Big( \big(H[j] \,/\, H[i]\big).R \Big)
+\]
+\end{block}
+\begin{itemize}
+    \item Los inversos por carácter se precomputan una vez ($\operatorname{adj}/\det$, con $\det^{-1}$ por Fermat): el monoide no invierte nada por consulta.
+    \item Una matriz aleatoria es singular con probabilidad $\sim d/M$; si $\det = 0$, resortear ese carácter.
+    \item \textbf{Complejidad:} $\mathcal{O}(n d^3)$ de preproceso, $\mathcal{O}(d^3)$ por consulta.
+    \item Lo que \textbf{no} da la alternativa clásica: duplicar y buscar ($t \subseteq ss$) cuesta $\mathcal{O}(L)$ por substring.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{RotHash}: código}
+Mismo esqueleto que \texttt{UnitHash} (\S2), con matrices.
+{\scriptsize
+\begin{verbatim}
+Mat ID, Rinv[256];       // Rinv[c] = adj(R[c]) / det (Fermat)
+struct RotHash {
+    Mat m, mi;                        // producto y su inverso
+    RotHash() : m(ID), mi(ID) {}      // neutro ""
+    RotHash(Mat m_, Mat mi_) : m(m_), mi(mi_) {}
+};
+// concatenacion: s seguido de t
+RotHash operator*(const RotHash& s, const RotHash& t) {
+    return RotHash(s.m * t.m, t.mi * s.mi);
+}
+// quitar el prefijo s de t (s prefijo de t)
+RotHash operator/(const RotHash& t, const RotHash& s) {
+    return RotHash(s.mi * t.m, t.mi * s.m);
+}
+ll rotHash(const RotHash& x) { return tr(x.m); }
+\end{verbatim}
+}
+Prefijos $H$ como en \S2: el hash de $s[i..j)$ es \verb|rotHash(H[j] / H[i])|.
+\end{frame}
+
+\begin{frame}{Refuerzo: la tupla de trazas}
+\begin{itemize}
+    \item La traza no es el único invariante de conjugación: $\operatorname{tr}(R), \operatorname{tr}(R^2), \dots, \operatorname{tr}(R^{d-1})$ también lo son, y son \textbf{independientes} entre sí.
+    \item Juntos determinan el \textbf{polinomio característico} de $R$: son toda la información de $R$ que sobrevive a la rotación.
+    \item Emitir la tupla en vez de una sola traza cuesta lo mismo asintóticamente ($d$ es constante) y hace las colisiones mucho más raras.
+    \item Con $d=3$ y hash de 61 bits, el par $(\operatorname{tr}(R), \operatorname{tr}(R^2))$ da 122 bits de aleatoriedad. Suficiente para casi cualquier escenario.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bonus: ¿cuándo 61 bits no alcanzan?}
+\footnotesize
+\begin{block}{Union bound sobre pares}
+Con $Q$ strings dos a dos no equivalentes y de largo $\le n$:
+\[
+\Pr[\exists \text{ colisión}] \;\le\; \binom{Q}{2}\cdot\frac{n}{M} \;\approx\; \frac{Q^2 n}{2M}
+\qquad\Longrightarrow\qquad Q_{\max} = \sqrt{\frac{2M\varepsilon}{n}}
+\]
+\end{block}
+\begin{itemize}
+    \item \textbf{De dónde sale el factor $n$:} la cota por par no es $1/M$ sino $n/M$, porque $\operatorname{tr} R(s) - \operatorname{tr} R(t)$ es homogéneo de \textbf{grado $n$} (un factor por carácter). $d$ cambia la cantidad de variables, no el grado. Es el mismo $n$ del hash polinomial, no un costo de esta técnica.
+    \item $Q = n = 10^6$ con $M = 2^{61}-1$ da cota $\approx 0{,}22$; para $\varepsilon = 10^{-6}$, $Q_{\max} \approx 2100$.
+    \item \textbf{En un problema normal no pasa:} si el input mide $N$ en total, $Qn \le N$ y la cota cae a $N^2/2M \approx 2\cdot10^{-7}$. Muchas strings $\Rightarrow$ cortas; largas $\Rightarrow$ pocas.
+    \item \textbf{El régimen peligroso es el que motivó la técnica:} con consultas de substrings $Q$ se desacopla del input ($10^6$ consultas dan $10^6$ strings distintas de largo $10^6$). Ídem strings generadas: todas las rotaciones, DP sobre concatenaciones.
+    \item Con el par de 122 bits, $Q_{\max} = \frac{M}{n}\sqrt{2\varepsilon} \approx 3\cdot10^9$. Siempre \textbf{como par}: colapsarlo a un \texttt{u64} tira el refuerzo a la basura.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bonus: dos familias $3\times3$, no una $4\times4$}
+\footnotesize
+\begin{center}
+\begin{tabular}{lcccl}
+\textbf{esquema} & \textbf{mult/car.} & \textbf{comp.} & \textbf{bits} & \textbf{exponente} \\
+\hline
+$d=3$, solo $\operatorname{tr} R$ & 27 & 1 & 61 & 1 \\
+$d=3$, $(\operatorname{tr} R, \operatorname{tr} R^2)$ & 27 & 2 & 122 & 2 heurístico \\
+$d=4$, $(\operatorname{tr} R^k)_{k\le 3}$ & 64 & 3 & 183 & 3 heurístico \\
+$2\times(d=3)$, el par en cada una & 54 & 4 & 244 & 2 probado $+$ 2 heur. \\
+\end{tabular}
+\end{center}
+\begin{itemize}
+    \item \textbf{El argumento decisivo es la independencia.} Dentro de una familia, $\operatorname{tr} R - \operatorname{tr} R'$ y $\operatorname{tr} R^2 - \operatorname{tr} R'^2$ son polinomios en \textbf{las mismas} variables: que se anulen a la vez es $\approx (n/M)^2$ solo si no comparten componente irreducible (plausible, no demostrado). Con dos familias las variables son disjuntas y $\Pr[f(X)=0 \wedge g(Y)=0] = \Pr[f=0]\Pr[g=0]$ sale por independencia estadística, sin hipótesis.
+    \item \textbf{Y encima es más barato:} $54 < 64$ productos por carácter, con más componentes. Además $\operatorname{tr}(R^k)$ tiene grado $kn$, o sea cota $kn/M$: las invariantes altas de $d=4$ son individualmente más débiles.
+    \item \textbf{Regla: nunca subas la dimensión, duplicá.}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bonus: la excepción es la memoria}
+\footnotesize
+Los prefijos de una matriz $3\times3$ ocupan $9$ \texttt{u64} $= 72$ B por posición y por familia. Con $n = 10^6$:
+\begin{itemize}
+    \item Una familia, solo $A$: \textbf{72 MB}.
+    \item Una familia, $A$ y $B$: \textbf{144 MB}.
+    \item Dos familias, $A$ y $B$: \textbf{288 MB} $\Rightarrow$ te pasás de los 256 MB habituales.
+\end{itemize}
+\begin{block}{Mitigación: guardar solo $A$ e invertir en la consulta}
+$A_i^{-1} = \operatorname{adj}(A_i)\cdot\det(A_i)^{M-2}$: la exponenciación son $\sim60$ productos, más la adjunta. La query pasa de $\sim$27 a $\sim$100 operaciones (sigue siendo $\mathcal{O}(1)$) y la memoria baja a la mitad.
+\end{block}
+\textbf{Regla práctica:} si es \emph{memory-bound}, una familia $d=3$ con el par de trazas y el heurístico. Si sobran los 288 MB o las strings son cortas, dos familias.
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Zobrist hashing}
+
+\begin{frame}{Aplicación 3: fingerprint de estados}
+\begin{block}{Por qué hashing gana}
+Serializar el estado completo (tablero, conjunto dinámico) para meterlo en un \texttt{set} de visitados es demasiado caro. Zobrist da un fingerprint de 64 bits \textbf{actualizable en $\mathcal{O}(1)$} por movimiento.
+\end{block}
+\begin{definicion}[Hash de Zobrist]
+Valor aleatorio de 64 bits por par \texttt{(posición, estado)}; el hash del estado es el \textbf{XOR} de los presentes. Es el caso particular de \S4 aplicado a un tablero/estado.
+\end{definicion}
+\textbf{Actualización incremental:} XOR-out lo que sale, XOR-in lo que entra, en $\mathcal{O}(1)$ por movimiento.
+\end{frame}
+
+\begin{frame}[fragile]{Zobrist: código}
+\begin{exampleblock}{Esquema estándar (Wikipedia / Chess Programming Wiki)}
+\begin{verbatim}
+uint64_t zob[NUM_PIEZAS][NUM_CASILLAS];  // precomputado
+
+uint64_t boardHash = 0;
+for (auto [pieza, casilla] : piezasEnTablero)
+    boardHash ^= zob[pieza][casilla];
+
+// mover una pieza de 'from' a 'to' (sin captura):
+boardHash ^= zob[pieza][from];   // sacar  (O(1))
+boardHash ^= zob[pieza][to];     // poner
+\end{verbatim}
+\end{exampleblock}
+Aplicaciones: dedup de estados visitados en DFS/backtracking, tablas de transposición en juegos, conjuntos dinámicos con inserción/borrado.
+\end{frame}
+
+\begin{frame}{Aplicación (para pensar): anagramas por consulta}
+Dadas dos cadenas $s, t$ y $q$ consultas $(i, j, L)$: decidir si $s[i..i{+}L)$ y $t[j..j{+}L)$ son \textbf{anagramas} (mismo multiconjunto de caracteres), en $\mathcal{O}(1)$ por consulta. Con $n, q \le 2\cdot 10^5$. ¿Cuál es el enfoque?
+\pause
+\begin{block}{Solución}
+\footnotesize
+Valor aleatorio de 64 bits por carácter y prefijos \textbf{suma}: dos rangos son anagramas sii coinciden sus sumas (mód $2^{64}$). La suma ignora el orden y preserva la multiplicidad, o sea que es el fingerprint de multiconjunto.
+
+\textbf{Trampas:}
+\begin{itemize}
+    \item \textbf{XOR}: se autocancela de a pares $\to$ una letra con multiplicidad par desaparece.
+    \item Hash \textbf{polinomial}: sensible al orden, distinguiría anagramas.
+    \item \textbf{Ordenar}: $\mathcal{O}(L\log L)$ por consulta, viola el $\mathcal{O}(1)$.
+    \item \textbf{Histogramas}: $\mathcal{O}(\Sigma) \neq \mathcal{O}(1)$
+\end{itemize}
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Hashing de árboles (isomorfismo)}
+
+\begin{frame}{Aplicación 4: hashing de árboles enraizados}
+%\begin{block}{Por qué hashing gana}
+%No existe ``suffix array de árboles''. Para comparar formas de árbol hace falta colapsar cada (sub)árbol a un valor canónico comparable en $\mathcal{O}(1)$.
+%\end{block}
+\begin{definicion}[Id canónico de un árbol enraizado]
+La \textbf{firma} de un nodo es la lista de los ids de sus hijos \textbf{ordenados}; una hoja recibe una constante. El \textbf{id} del nodo es el que un diccionario global asigna a esa firma.
+\end{definicion}
+Ordenar los ids de los hijos hace la firma \textbf{invariante a permutar hijos}: dos subárboles isomorfos reciben el mismo id.
+\end{frame}
+
+\begin{frame}[fragile]{Hashing de árboles enraizados: etiquetado canónico (AHU)}
+\begin{exampleblock}{Diccionario global firma $\to$ id (algoritmo AHU)}
+\begin{verbatim}
+struct TreeCanonizer {
+    map<vector<int>, int> idOf;   // hijos ordenados -> id
+
+    int canonicalId(int u, int p,
+                    const vector<vector<int>>& adj) {
+        vector<int> childIds;
+        for (int v : adj[u]) if (v != p)
+            childIds.push_back(canonicalId(v, u, adj));
+        sort(childIds.begin(), childIds.end());// normalizar
+        return idOf.try_emplace(
+            childIds, (int)idOf.size()).first->second;
+    }
+};
+// isomorfos sii, con UNA instancia compartida:
+//   c.canonicalId(r1,-1,adj1) == c.canonicalId(r2,-1,adj2)
+\end{verbatim}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Árboles no enraizados y aplicaciones}
+\begin{itemize}
+    \item \textbf{Sin raíz:} enraizar en el/los \textbf{centroide(s)} (invariantes bajo isomorfismo). Si hay dos, comparar el par ordenado $\{id(c_1), id(c_2)\}$.
+    \item Este etiquetado canónico es el algoritmo \textbf{AHU}: al ser determinista, dos árboles reciben el mismo id \textbf{si y solo si} son isomorfos.
+    \item Aplicaciones: isomorfismo, \textbf{contar subárboles distintos}, detectar simetrías/automorfismos.
+\end{itemize}
+\begin{block}{Señal de reconocimiento}
+El problema compara formas de (sub)árbol / cuenta estructuras arbóreas distintas $\to$ id canónico con hijos ordenados; si no hay raíz, centroide.
+\end{block}
+\end{frame}
+
+\begin{frame}{Aplicación (para pensar): pares de subárboles isomorfos}
+Dado un árbol enraizado de $n \le 2\cdot 10^5$ nodos, contar cuántos \textbf{pares} de nodos $\{u, v\}$ tienen subárboles (colgando de $u$ y de $v$) isomorfos entre sí. ¿Cuál es el enfoque?
+\pause
+\begin{block}{Solución}
+\footnotesize
+\begin{itemize}
+    \item \textbf{Id canónico} por subárbol (firma $=$ ids de los hijos \textbf{ordenados}, hoja $=$ constante): son isomorfos sii comparten id.
+    \item Agrupar por id y sumar $\binom{c_k}{2}$ por clase. Total $\mathcal{O}(n\log n)$: las firmas suman $\mathcal{O}(n)$ y cada consulta al diccionario cuesta $\log n$ comparaciones.
+    \item \textbf{Clave: ordenar} los ids. Sin ordenar, subárboles isomorfos reciben ids distintos y se sobrecontarían las clases.
+    \item Comparar nodo a nodo es $\mathcal{O}(n^2\cdot\text{tamaño})$; un hash de los grados en preorden no es invariante bajo isomorfismo.
+\end{itemize}
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Strings mutables: Segment Tree de hashes}
+
+\begin{frame}{Aplicación 5: strings mutables}
+\begin{block}{Por qué hashing gana}
+Es el caso donde \emph{incluso sobre strings} hashing es lo único viable: Suffix Array/Automaton \textbf{no soportan updates}. Resuelve el segundo problema de la introducción.
+\end{block}
+\begin{itemize}
+    \item El hash es un \textbf{monoide} (\S2) $\to$ se enchufa a un \texttt{SegTree<UnitHash>} genérico.
+    \item \texttt{Query(i,j)} $=$ concatenación en el rango (hash del substring, \textbf{sin inverso}).
+    \item \texttt{Update(i,c)} $=$ point-update de un carácter en $\mathcal{O}(\log n)$.
+\end{itemize}
+La clave: usar la concatenación (\textbf{no} conmutativa); sumar haría colisionar \texttt{"ab"} y \texttt{"ba"}.
+\end{frame}
+
+\begin{frame}[fragile]{Segment Tree de hashes}
+\begin{exampleblock}{El neutro y la operación son los del monoide}
+{\footnotesize
+\begin{verbatim}
+struct StringEq {
+    SegTree<UnitHash> st;
+    explicit StringEq(const string& s) : st(build(s)) {}
+    static SegTree<UnitHash> build(const string& s) {
+        vector<UnitHash> hojas;
+        for (char c : s) hojas.emplace_back(string(1, c));
+        return SegTree<UnitHash>(hojas, UnitHash(),
+            [](UnitHash a, UnitHash b) { return a * b; });
+    }
+    void Update(int i, char c) {
+        st.update(i, UnitHash(string(1, c)));
+    }
+    bool Query(int i, int j, int l) {// S[i..i+l)==S[j..j+l)
+        return st.query(i, i + l) == st.query(j, j + l);
+    }
+};
+\end{verbatim}
+}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Aplicación (para pensar): palíndromos con updates}
+Se procesan operaciones sobre un string: (1) cambiar $s[i]=c$; (2) dado $(l, r)$, decidir si $s[l..r]$ es \textbf{palíndromo}. Con $n, q \le 2\cdot 10^5$. ¿Cuál es el enfoque?
+\pause
+\begin{block}{Solución}
+\footnotesize
+Dos \textbf{Segment Trees de hashes}: uno del string directo y otro del reverso. $s[l..r]$ es palíndromo sii el hash directo del rango coincide con el del rango espejado en el reverso. Consulta y update, $\mathcal{O}(\log n)$.
+
+\textbf{Trampas:}
+\begin{itemize}
+    \item \textbf{Manacher} no soporta updates: recomputar es $\mathcal{O}(n)$.
+    \item Combinar con \textbf{suma} es simétrico $\to$ diría ``palíndromo'' siempre.
+    \item Comparar carácter por carácter es $\mathcal{O}(\text{longitud})$ por consulta.
+\end{itemize}
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------------
+\section{Cierre}
+
+\begin{frame}{Cierre: lo que se llevan}
+\begin{block}{Señales de reconocimiento}
+\footnotesize
+\begin{itemize}
+    \item \textbf{Segmentos/potencias de string} $\to$ monoide de hash ($+$ LCP, $+$ binpow).
+    \item \textbf{Conjuntos/multiconjuntos} (orden no importa) $\to$ XOR / suma de aleatorios.
+    \item \textbf{Comparar módulo rotación} $\to$ traza de un producto de matrices aleatorias.
+    \item \textbf{Estados que cambian de a poco} $\to$ Zobrist incremental.
+    \item \textbf{Formas de (sub)árbol} $\to$ id canónico con hijos ordenados / centroide.
+    \item \textbf{Substrings con updates} $\to$ Segment Tree de \texttt{UnitHash}.
+\end{itemize}
+\end{block}
+Y siempre: \textbf{hacerlo bien} ($2^{61}{-}1$ o doble hash, base aleatoria) porque comparar de a muchos vive en $k^2/2M$.
+\end{frame}
+
+
+\end{document}
