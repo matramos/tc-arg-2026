@@ -227,11 +227,11 @@ def scrape_submissions(group_id, contest_id, cookies_str):
             new_subs += 1
             
         print(f"  Parsed {page_subs} submissions ({new_subs} new).")
-        if new_subs == 0 or page_subs < 50:
+        if new_subs == 0:
             break
             
         page += 1
-        time.sleep(1.5) # Polite scraping delay
+        time.sleep(1.2) # Polite scraping delay
         
     return submissions
 
