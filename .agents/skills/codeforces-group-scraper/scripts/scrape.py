@@ -15,32 +15,59 @@ class ContestsParser(HTMLParser):
         super().__init__()
         self.group_id = group_id
         self.contests = []
-        self.in_link = False
+        self.in_table = False
+        self.in_row = False
+        self.cell_index = -1
+        self.in_cell = False
+        self.current_cell_text = ""
         self.current_href = None
-        self.current_text = ""
 
     def handle_starttag(self, tag, attrs):
-        if tag == "a":
-            attrs_dict = dict(attrs)
-            href = attrs_dict.get("href", "")
-            if f"/group/{self.group_id}/contest/" in href:
-                parts = href.split("/")
-                if parts[-1].isdigit():
-                    self.in_link = True
-                    self.current_href = parts[-1]
-                    self.current_text = ""
+        attrs_dict = dict(attrs)
+        if tag == "table":
+            self.in_table = True
+        elif self.in_table:
+            if tag == "tr":
+                self.in_row = True
+                self.cell_index = -1
+            elif self.in_row:
+                if tag in ["td", "th"]:
+                    self.in_cell = True
+                    self.cell_index += 1
+                    if self.cell_index == 0:
+                        self.current_cell_text = ""
+                        self.current_href = None
+                elif self.in_cell and self.cell_index == 0:
+                    if tag == "a":
+                        href = attrs_dict.get("href", "")
+                        if f"/group/{self.group_id}/contest/" in href:
+                            parts = href.split("/")
+                            if parts[-1].isdigit():
+                                self.current_href = parts[-1]
 
     def handle_data(self, data):
-        if self.in_link:
-            self.current_text += data
+        if self.in_cell and self.cell_index == 0:
+            self.current_cell_text += data
 
     def handle_endtag(self, tag):
-        if tag == "a" and self.in_link:
-            name = self.current_text.strip()
-            # Avoid duplicates
-            if not any(c["id"] == self.current_href for c in self.contests):
-                self.contests.append({"id": self.current_href, "name": name})
-            self.in_link = False
+        if tag == "table":
+            self.in_table = False
+        elif self.in_table:
+            if tag == "tr":
+                self.in_row = False
+                if self.current_href and self.current_cell_text:
+                    raw_text = self.current_cell_text.strip()
+                    raw_text = " ".join(raw_text.split())
+                    name = raw_text
+                    for marker in ["Enter »", "Enter", "Virtual", "virtual participation"]:
+                        if marker in name:
+                            name = name.split(marker)[0].strip()
+                            
+                    if name and not any(c["id"] == self.current_href for c in self.contests):
+                        self.contests.append({"id": self.current_href, "name": name})
+            elif self.in_row:
+                if tag in ["td", "th"]:
+                    self.in_cell = False
 
 class SubmissionsParser(HTMLParser):
     def __init__(self):
@@ -57,7 +84,7 @@ class SubmissionsParser(HTMLParser):
         if tag == "table":
             # Codeforces status table
             cls = attrs_dict.get("class", "")
-            if "status-frame-datatable" in cls or not self.in_table:
+            if "status-frame-datatable" in cls:
                 self.in_table = True
         elif self.in_table:
             if tag == "tr":
@@ -120,10 +147,11 @@ def get_group_contests(group_id, cookies_str):
 def scrape_submissions(group_id, contest_id, cookies_str):
     submissions = []
     page = 1
+    seen_ids = set()
     
     while True:
-        url = f"{BASE_URL}/group/{group_id}/contest/{contest_id}/status/page/{page}"
-        print(f"  Fetching submissions page {page} for contest {contest_id}...")
+        url = f"{BASE_URL}/group/{group_id}/contest/{contest_id}/status?pageIndex={page}"
+        print(f"  Fetching submissions for page {page} for contest {contest_id}...")
         html_content, status = make_request(url, cookies_str)
         
         if status != 200:
@@ -166,6 +194,7 @@ def scrape_submissions(group_id, contest_id, cookies_str):
                 
         # Parse rows
         page_subs = 0
+        new_subs = 0
         for row in rows[1:]:
             if not row or len(row) < max(col_indices.values()) + 1:
                 continue
@@ -181,6 +210,10 @@ def scrape_submissions(group_id, contest_id, cookies_str):
             if not sub_id:
                 continue
                 
+            if sub_id in seen_ids:
+                continue
+                
+            seen_ids.add(sub_id)
             submissions.append({
                 "submission_id": sub_id,
                 "contest_id": contest_id,
@@ -191,9 +224,10 @@ def scrape_submissions(group_id, contest_id, cookies_str):
                 "when": when
             })
             page_subs += 1
+            new_subs += 1
             
-        print(f"  Parsed {page_subs} submissions on page {page}.")
-        if page_subs < 50:
+        print(f"  Parsed {page_subs} submissions ({new_subs} new).")
+        if new_subs == 0 or page_subs < 50:
             break
             
         page += 1
@@ -204,12 +238,19 @@ def scrape_submissions(group_id, contest_id, cookies_str):
 def main():
     parser = argparse.ArgumentParser(description="Scrape submissions from a Codeforces Group (Standard Library Only)")
     parser.add_argument("--group", default="GHvtTrfZFd", help="Group ID (from URL, e.g., GHvtTrfZFd)")
-    parser.add_argument("--jsessionid", required=True, help="JSESSIONID cookie value")
-    parser.add_argument("--cookie-39ceb", required=True, help="39ceb cookie value")
+    parser.add_argument("--cookies", help="Full cookie string (e.g. from document.cookie in browser console)")
+    parser.add_argument("--jsessionid", help="JSESSIONID cookie value (alternative)")
+    parser.add_argument("--secret-cookie-name", default="39ceb", help="Name of the session tracking cookie (e.g. 39ceb, 39ce7)")
+    parser.add_argument("--secret-cookie-value", help="Value of the session tracking cookie")
     parser.add_argument("--output", default="submissions.json", help="Path to output JSON file")
     args = parser.parse_args()
     
-    cookies_str = f"JSESSIONID={args.jsessionid}; 39ceb={args.cookie_39ceb}"
+    if args.cookies:
+        cookies_str = args.cookies
+    elif args.jsessionid and args.secret_cookie_value:
+        cookies_str = f"JSESSIONID={args.jsessionid}; {args.secret_cookie_name}={args.secret_cookie_value}"
+    else:
+        parser.error("Either --cookies or both --jsessionid and --secret-cookie-value must be provided.")
     
     # 1. Fetch group contests
     contests = get_group_contests(args.group, cookies_str)

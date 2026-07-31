@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 
 def parse_contest_info(name):
     # Determine Day
-    day_match = re.search(r'(?:day|día|dia)\s*(\d+)', name, re.IGNORECASE)
+    day_match = re.search(r'(?:day|día|dia|contest\s*#)\s*(\d+)', name, re.IGNORECASE)
     day = int(day_match.group(1)) if day_match else None
     
     # Determine Level
@@ -179,7 +179,7 @@ def main():
         
         val_a = subs_by_day_level.get((day, "Avanzado"), 0)
         h_a = val_a * scale_y
-        bars_avanzado.append(f"\\fill[red!80] ({day-1}.1,0) rectangle ({day-1}.4,{h_a:.3f}); % Day {day} ({val_a})")
+        bars_avanzado.append(f"\\fill[red!80] ({day}.1,0) rectangle ({day}.4,{h_a:.3f}); % Day {day} ({val_a})")
         
     chart_latex = f"""\\begin{{frame}}{{Submissions por Día - Gráfico}}
 \\begin{{center}}
@@ -215,6 +215,7 @@ def main():
     
     # 5. Languages
     lang_counter = Counter()
+    other_lang_counter = Counter()
     for lang in languages:
         l_lower = lang.lower()
         if "c++23" in l_lower or "c++ 23" in l_lower:
@@ -227,11 +228,25 @@ def main():
             lang_counter["Python"] += 1
         else:
             lang_counter["Otros"] += 1
+            other_lang_counter[lang] += 1
             
     total_langs = sum(lang_counter.values())
     lang_pcts = {k: (v / total_langs)*100 for k, v in lang_counter.items()}
     sorted_lang_pcts = sorted(lang_pcts.items(), key=lambda x: x[1], reverse=True)
     lang_pie_str = ", ".join([f"{pct:.1f}/{name}" for name, pct in sorted_lang_pcts])
+    
+    other_langs_list = []
+    for o_lang, o_count in other_lang_counter.most_common():
+        other_langs_list.append(f"{o_lang} ({o_count})")
+    
+    if other_langs_list:
+        other_langs_str = ", ".join(other_langs_list)
+        other_langs_latex = f"""
+\\vspace{{0.3cm}}
+\\small
+\\textbf{{Otros incluye:}} {other_langs_str}"""
+    else:
+        other_langs_latex = ""
     
     # Verdicts
     verdict_counter = Counter()
@@ -258,32 +273,37 @@ def main():
     verd_pie_str = ", ".join([f"{pct:.1f}/{name}" for name, pct in sorted_verd_pcts if pct > 0.5])
     
     print("\n" + "="*50)
-    print("LaTeX: Diapositiva 'Análisis de Submissions'")
+    print("LaTeX: Diapositiva 'Lenguajes Utilizados'")
     print("="*50)
-    analysis_latex = f"""\\begin{{frame}}{{Análisis de Submissions}}
-\\begin{{columns}}[t]
-\\column{{0.5\\textwidth}}
-\\textbf{{Lenguajes Utilizados:}}
+    languages_latex = f"""\\begin{{frame}}{{Lenguajes Utilizados}}
+\\begin{{center}}
 
 \\vspace{{0.2cm}}
 
 \\begin{{tikzpicture}}
-\\pie[text=legend, radius=1.5, sum=auto, after number=\\%]
+\\pie[text=legend, radius=1.8, sum=auto, after number=\\%]
   {{{lang_pie_str}}}
 \\end{{tikzpicture}}
-
-\\column{{0.5\\textwidth}}
-\\textbf{{Respuestas del Juez:}}
+{other_langs_latex}
+\\end{{center}}
+\\end{{frame}}"""
+    print(languages_latex)
+    
+    print("\n" + "="*50)
+    print("LaTeX: Diapositiva 'Respuestas del Juez'")
+    print("="*50)
+    verdicts_latex = f"""\\begin{{frame}}{{Respuestas del Juez}}
+\\begin{{center}}
 
 \\vspace{{0.2cm}}
 
 \\begin{{tikzpicture}}
-\\pie[text=legend, radius=1.5, sum=auto, after number=\\%]
+\\pie[text=legend, radius=1.8, sum=auto, after number=\\%]
   {{{verd_pie_str}}}
 \\end{{tikzpicture}}
-\\end{{columns}}
+\\end{{center}}
 \\end{{frame}}"""
-    print(analysis_latex)
+    print(verdicts_latex)
     
     # 6. Additional metrics
     most_users_contest = max(contest_stats.items(), key=lambda x: len(x[1]["users"]))
@@ -320,47 +340,52 @@ def main():
     min_probs = min(prob_counts) if prob_counts else 0
     max_probs = max(prob_counts) if prob_counts else 0
     
+    most_users_name_escaped = most_users_name.replace("#", "\\#")
+    most_subs_name_escaped = most_subs_name.replace("#", "\\#")
+    best_inicial_name_escaped = best_inicial_name.replace("#", "\\#")
+    hardest_name_escaped = hardest_name.replace("#", "\\#")
+
     print("\n" + "="*50)
-    print("LaTeX: Diapositiva 'Estadísticas Adicionales'")
+    print("LaTeX: Diapositiva 'Participación por Contest'")
     print("="*50)
-    additional_latex = f"""\\begin{{frame}}{{Estadísticas Adicionales}}
+    participation_latex = f"""\\begin{{frame}}{{Participación por Contest}}
 \\begin{{center}}
 \\Large
-\\textbf{{Más Información de Submissions}}
+\\textbf{{Estadísticas de Participación}}
 
-\\vspace{{0.3cm}}
+\\vspace{{0.6cm}}
 
-\\begin{{columns}}[t]
-\\column{{0.5\\textwidth}}
-\\textbf{{Participación por Contest:}}
-
-\\vspace{{0.1cm}}
-
-\\small
+\\large
 \\begin{{itemize}}
-\\item \\textbf{{Más Participantes:}} {most_users_name} ({most_users_count})
-\\item \\textbf{{Más Submissions:}} {most_subs_name} ({most_subs_count:,})
+\\item \\textbf{{Más Participantes:}} {most_users_name_escaped} ({most_users_count})
+\\item \\textbf{{Más Submissions:}} {most_subs_name_escaped} ({most_subs_count:,})
 \\item \\textbf{{Promedio Submissions:}} {avg_subs_per_contest:.0f} por contest
 \\item \\textbf{{Participantes Únicos:}} {total_unique_users} total
 \\end{{itemize}}
-
-\\column{{0.5\\textwidth}}
-\\textbf{{Métricas de Rendimiento:}}
-
-\\vspace{{0.1cm}}
-
-\\small
-\\begin{{itemize}}
-\\item \\textbf{{Submissions/Participante:}} {subs_per_user:.1f} promedio
-\\item \\textbf{{Mejor Contest Inicial:}} {best_inicial_name} ({best_inicial_pct:.1f}\\% accepted)
-\\item \\textbf{{Contest Más Difícil:}} {hardest_name} ({hardest_pct:.1f}\\% accepted)
-\\item \\textbf{{Problemas Intentados:}} {min_probs}-{max_probs} por contest
-\\end{{itemize}}
-\\end{{columns}}
-
 \\end{{center}}
 \\end{{frame}}"""
-    print(additional_latex)
+    print(participation_latex)
+    
+    print("\n" + "="*50)
+    print("LaTeX: Diapositiva 'Métricas de Rendimiento'")
+    print("="*50)
+    performance_latex = f"""\\begin{{frame}}{{Métricas de Rendimiento}}
+\\begin{{center}}
+\\Large
+\\textbf{{Rendimiento de los Alumnos}}
+
+\\vspace{{0.6cm}}
+
+\\large
+\\begin{{itemize}}
+\\item \\textbf{{Submissions/Participante:}} {subs_per_user:.1f} promedio
+\\item \\textbf{{Mejor Contest Inicial:}} {best_inicial_name_escaped} ({best_inicial_pct:.1f}\\% accepted)
+\\item \\textbf{{Contest Más Difícil:}} {hardest_name_escaped} ({hardest_pct:.1f}\\% accepted)
+\\item \\textbf{{Problemas Intentados:}} {min_probs}-{max_probs} por contest
+\\end{{itemize}}
+\\end{{center}}
+\\end{{frame}}"""
+    print(performance_latex)
     
     print("\n" + "="*50)
     print("LaTeX: Diapositiva 'Total de Submissions'")
@@ -379,7 +404,7 @@ def main():
 \\normalsize
 \\begin{{itemize}}
 \\item \\textbf{{{total_unique_users} participantes únicos}}
-\\item \\textbf{{{len(data.get("submissions", []))}} submissions analizadas}}
+\\item \\textbf{{{len(data.get("submissions", []))} submissions analizadas}}
 \\item \\textbf{{{total_problems_with_dups} problemas disponibles}}
 \\item \\textbf{{{unique_problems_count} problemas únicos}}
 \\end{{itemize}}
